@@ -1,0 +1,737 @@
+
+player: fighting =1; hp =20; wits =3; charisma =2;
+
+item: fighting +1: basic plasmaster
+item: fighting +2: goodsider plasmaster
+item: fighting +2: ultra blaster
+item: fighting +1: alpha ray
+item: fighting +1: beta ray
+item: fighting +0: mind-bending ray
+item: charisma +1: erotic ring
+item: fighting +2: mysterious chip
+item: wits +0: psychic aspect
+item: wits +1: vp chip
+item: fighting +1: vp pill
+
+specialization: wits +1; charisma +1: medic
+specialization: wits +0: surgeon
+specialization: charisma +0: pediatrics
+specialization: wits +2: engineer
+specialization: fighting +2: fighter
+
+1, 4,  battle: fighting =1; hp =2: Frank the Goodsider;
+1, 6,  battle: fighting =1; hp =3: Nice Man
+1, 8B, battle: fighting =1; hp =5: father
+1, 10, battle: fighting =2; hp =8: professor (moderate difficulty)
+1, 15, battle: fighting =3; hp =6: Angry Moms
+1, 20, battle: fighting =1; hp =6: beard father
+1, 11, battle: wits =8: Nice Old Lady
+1, 7,  battle: wits =5: keg of inexpensive grain alcohol
+1, 46, battle: wits =8: First Incision
+1, 48, battle: wits =8: Exam Part 1
+1, 49, battle: wits =8: Surgery
+1, 54, battle: fighting =2; hp =8; wits =5: Caterpillar Jesus; TK
+1, 56, battle: wits =8: Weight Alteration
+
+1, 4, gain Basic Plasmaster
+1, 5, gain Alpha Ray
+1, 8, gain Goodsider Plasmaster
+1, 10, gain Beta Ray
+1, 12, gain Erotic Ring
+1, 20, gain Goodsider Plasmaster
+1, 28, gain Erotic Ring
+1, 30, minigame: witrolling: 1-4 = wits +2; 5-8 = wits -2; 9 = quit; 0 = quit
+1, 32, gain mysterious chip
+1, 34, gain psychic aspect
+1, 36, meet Joe
+1, 37, meet Xasktriskix
+1, 39, gain Ultra Blaster
+1, 40C, gain VP Pill
+1, 41, gain psychic aspect
+1, 42, gameover
+1, 44, gameover
+1, 45, gain VP Chip
+1, 50, lose all
+1, 57, gain Basic Plasmaster
+1, 57, nextact
+1, 58, lose all
+1, 60, gameover
+
+1, 1, 2, (always)
+1, 2, 3, become medic
+1, 2, 4, become fighter
+1, 2, 5, become engineer
+1, 3, 6, you go into pediatrics
+1, 3, 7, you go into surgeon
+1, 4, 8, you win (battling Fighting: Frank the Goodsider)
+1, 5, 9, you go to the psybrary to downbrain as much information as possible
+1, 5, 10, you decide to kill your professor and take his brain
+1, 6, 11, you win (battling Fighting: Nice Man)
+1, 7, 6, you lose, Charisma -3 (battling Wits: Keg of inexpensive grain alcohol.)
+1, 7, 12, you win, Wits -3 (battling Wits: Keg of inexpensive grain alcohol.)
+1, 8, 8B, you choose to fight
+1, 8, 13, you choose not to fight
+1, 8B, 14, you win (battling Fighting: Father)
+1, 9, 15, you seize the opportunity to beat one up and take his delicious drugs
+1, 9, 16, you suck it up, read your books, and take the damn test
+1, 10, 17, you win, Gain Beta Ray (battling Fighting: Professor)
+1, 11, 12, become surgeon (battling Wits: Nice Old Lady)
+1, 11, 18, you defeat her (battling Wits: Nice Old Lady)
+1, 12, 19, (always)
+1, 13, 20, you fight badsiders
+1, 13, 21, you join them
+1, 14, 22, (always); HP -3
+1, 15, 23, you survive (battling Fighting: Angry Moms)
+1, 16, 24, you choose to shower; wits +3, charisma -3
+1, 16, 35, you choose not to; wits +3, charisma -3
+1, 17, 25, you wish to hire a lawyer
+1, 17, 26, you wish to represent yourself
+1, 18, 27, you go with the piranhas
+1, 18, 28, you go with the apple
+1, 19, 29, you spend the night at the Silene Cathedral/Hotbox
+1, 19, 30, you spend the night at the library
+1, 20, 31, you win (battling Fighting: Beard Father)
+1, 21, 32, (always)
+1, 21, 33, (always)
+1, 22, 43, you stab one after the other in an ever more horrifying crescendo of gruesomeness
+1, 22, 59, you note that by creating an incentive system, you could have the group kill itself person-on-person, meaning that the whole affair could be accomplished  in log2(100) steps
+1, 23, 34, you decide to take the drugs
+1, 23, 35, you wuss out of taking a pile of strange unlabeled pills
+1, 24, 58, you karate chop Lord Wheaton
+1, 24, 60, you point out that the only masturbation material in the geek dorms is old issues of Starlog from the 1980s, and who the hell wants to masturbate to Carrie Fisher
+1, 25, 36, you hire Joe
+1, 25, 37, you hire Xasktriskix
+1, 26, 38, you plan to make an impassioned speech
+1, 26, 39, gain mind-bending ray
+1, 27, 40, (always); hp =1, charisma +3
+1, 28, 40, (always)
+1, 29, 40, (always); wits -3
+1, 30, 40, you lose, wits +3
+1, 30, 41, you win; wits +3
+1, 31, 42,
+1, 31, 43, you do what the voices in your head say and kill everyone
+1, 32, 43, (always)
+1, 33, 43, (always); hp -3
+1, 34, 48, (always); wits +3, HP -5, charisma -2
+1, 35, 48, (always)
+1, 36, 45, (always); charisma +3, charisma -6
+1, 37, 45, (always); wits +3
+1, 38, 45, (always); charisma -3
+1, 39, 45, (always)
+1, 40, 40B, you say “great!”; hp -3
+1, 40, 40C, you begin to say something, then sputter and cry; HP -3
+1, 40B, 46, (always)
+1, 40C, 46, (always)
+1, 41, 40, (always)
+1, 43, 43B, (always)
+1, 43B, 44, not
+1, 43B, 54, you were right
+1, 45, 48, (always)
+1, 46, 49, you win (battling Wits: First Incision)
+1, 48, 52, you win (battling Wits: Exam Part 1)
+1, 49, 53, you succeed (battling Wits: Surgery.)
+1, 50, 3, become medic; wits -3
+1, 50, 4, become fighter; wits -3
+1, 51, 50, you got it wrong
+1, 51, 56, you got it right
+1, 52, 51, (always)
+1, 53, 57, (always); charisma +3
+1, 54, 57, you win (battling Fighting and Wits: Caterpillar Jesus)
+1, 55, 57, (always); charisma +2, fighting -2
+1, 55, 57, (always); charisma -2, fighting +2
+1, 56, 55, you win (battling Wits: Weight Alteration)
+1, 58, 3, become medic; charisma +2, fighting -3
+1, 59, 5, become engineer
+
+2, 2, battle: charisma =7: Commander Sourek
+2, 4, battle: fighting =2; hp =15: Wall
+2, 6, battle: wits =8: IQ test.
+2, 7, battle: wits =3: Cleaning
+2, 13B, battle: fighting =3; hp =6: Captain
+2, 15, battle: wits =6: Enemy Captain
+2, 19, battle: fighting =1; hp =4: Scientists
+2, 20, battle: fighting =4; hp =4: Lunchlady
+2, 25, minigame: roulette: a random number is above 6
+2, 26, battle: wits =8; charisma =8: Everyone (difficult)
+2, 27, battle: fighting =8; hp =60: 50 armed soldiers
+2, 28, battle: fighting =1; hp =4: Goodsiders
+2, 36, battle: fighting =4; hp =10: Smilnit
+2, 42, battle: fighting =4; hp =10: Man-Eating Anglerfish
+2, 46, battle: fighting =1; hp =10: 100 goodsiders
+2, 54B, battle: charisma =6: Speaking
+2, 56, battle: charisma =7: General
+2, 57, battle: wits =5: Officers
+2, 58, battle: fighting =4; hp =15: General Hovno
+2, 61, battle: fighting =1; hp =5: Sleeping General
+2, 63, battle: wits =4: Dying People
+2, 68, battle: wits =6: Speech
+2, 70, battle: fighting =2; hp =10: Young Upstart
+2, 74, battle: wits =5: Standing
+2, 79, battle: fighting =1; hp =3: Rebel Assault Force
+2, 81, battle: wits =5: Missiles
+2, 83, battle: fighting =1; hp =5: Goodsiders
+2, 90, battle: fighting =1; hp =5: Goodsiders
+2, 91, battle: fighting =10; hp =30: Master Slaboch
+
+item: hp +0: medi-pack
+item: hp +0: pilot aspect
+
+2, 1, gain Medi-Pack
+2, 5B, gameover
+2, 10, gain Pilot Aspect
+2, 12B, gameover
+2, 12C, gameover
+2, 23B, gameover
+2, 30, gain Medi-Pack
+2, 31B, gameover
+2, 44B, gameover
+2, 55, gameover
+2, 67, gameover
+2, 86, gameover
+2, 89, gameover
+2, 95, gameover
+2, 96, gain President's Gun
+2, 98, charisma +5
+2, 98, nextact
+
+2, 1, 2, you are an engineer
+2, 1, 2, you are a medic
+2, 1, 6, you are a fighter
+2, 2, 3, you win (battling Charisma: Commander Sourek)
+2, 2, 4, you lose (battling Charisma: Commander Sourek)
+2, 3, 5, you keep order with an iron fist; charisma +1
+2, 3, 7B, you keep order through friendship and camaraderie; charisma +1
+2, 4, 7, you succeed (battling Fighting: Wall); charisma -2
+2, 5, 5B, you laugh at him, daring him to shoot you
+2, 5, 8, you pretend to take her question seriously, talk her down, pat her on the back for having spunk, then poison her beer that night
+2, 6, 2, you win (battling Wits: IQ test.)
+2, 6, 4, you lose (battling Wits: IQ test.)
+2, 7, 9, you succeed (battling Wits: Cleaning)
+2, 7B, 14, (always); hp -3
+2, 8, 8B, (always)
+2, 8B, 8C, you make your best effort to pass the test fairly
+2, 8B, 10, you hack the system, thereby altering the test so that it is winnable
+2, 8B, 11, you shoot a gun at your fellow test-takers, killing them indiscriminately
+2, 8C, 11, (always); charisma -3
+2, 9, 8B, you kill him
+2, 9, 11, you ignore your frontal lobe and thank him for being so wise
+2, 10, 12, (always)
+2, 11, 13, you elect to go steal it
+2, 11, 14, you refuse
+2, 12, 12B, you decide to talk to them
+2, 12, 15, you fire at the enemy
+2, 13, 12C, you use the energy to levitate the porn
+2, 13, 13B, you creep like a snake under the bed
+2, 13B, 16, you win (battling Fighting: Captain)
+2, 14, 17, (always); charisma -5
+2, 15, 21, you win (battling Wits: Enemy Captain)
+2, 16, 21, (always); charisma -1, charisma +2, charisma -1
+2, 17, 19, you drink up
+2, 17, 20, you refuse
+2, 18, 45, (always)
+2, 19, 22, you win (battling Fighting: Scientists);fighting +20
+2, 20, 23, you win (battling Fighting: Lunchlady)
+2, 21, 24, you bombard from distance
+2, 21, 25, you sportingly bombard them from a slightly shorter distance
+2, 22, 18, you are a medic; fighting -20
+2, 22, 26, fighting -20
+2, 23, 23B, you do what your primary caretaker between ages 3 and 7 did and obey the voices in your head
+2, 23, 27, you fight the entire group
+2, 24, 28, not
+2, 24, 33, you are optionally an engineer
+2, 25, 29, you win
+2, 26, 18, you win (battling Wits and Charisma: Everyone (difficult))
+2, 26, 26B, you lose (battling Wits and Charisma: Everyone (difficult))
+2, 26B, 26C, (always); charisma -3
+2, 26C, 32, (always); hp -2
+2, 27, 27B, you win (battling Fighting: 50 armed soldiers)
+2, 27, 30, you lose (battling Fighting: 50 armed soldiers)
+2, 27B, 30, (always); charisma -1
+2, 28, 31, you win (battling Fighting: Goodsiders); hp +3
+2, 29, 32, (always)
+2, 30, 26B, (always); hp=3
+2, 31, 31B, you follow the dying man's advice
+2, 31, 33, you are optionally an engineer
+2, 31, 31C, otherwise
+2, 31C, 33B, (always); charisma -2
+2, 32, 34, (always); hp -3
+2, 33, 33B, (always)
+2, 33B, 35, (always)
+2, 34, 36, (always)
+2, 34, 37, (always)
+2, 35, 43, you take his advice
+2, 35, 44, you use the energy to choke the young fool
+2, 36, 39, you win (battling Fighting: Smilnit)
+2, 37, 41, you go away from the light
+2, 37, 42, you go toward the light
+2, 39, 40B, (always)
+2, 40, 40B, (always)
+2, 40B, 45, (always)
+2, 41, 46, some shit
+2, 42, 40, you win (battling Fighting: Man-Eating Anglerfish)
+2, 43, 51, (always); charisma -5
+2, 44, 44B, you kill him and follow your own, clearly stupid, idea
+2, 44, 48, you do what the kid says
+2, 45, 52, (always); charisma +2
+2, 46, 50, you win (battling Fighting: 100 goodsiders)
+2, 48, 51, (always); charisma +5, charisma -5
+2, 50, 52, (always); charisma +5
+2, 51, 53, (always)
+2, 52, 53, (always)
+2, 53, 56, you locate the local authority and attempt to seize control; hp -2
+2, 53, 57, you try to subvert the system from the inside; hp -2
+2, 54, 54B, you attempt to win them over
+2, 54, 55, you run for it
+2, 54B, 60, you win (battling Charisma: Speaking)
+2, 56, 58, you win (battling Charisma: General)
+2, 56, 59, you lose (battling Charisma: General)
+2, 57, 57B, you win (battling Wits: Officers)
+2, 57B, 61, you win; fighting +10
+2, 58, 54B, you win, you must still convince the troops to trust you. (battling Fighting: General Hovno)
+2, 59, 54, you are an engineer
+2, 59, 61, you are a fighter
+2, 59, 62, you are a medic
+2, 60, 64, you insist on a new system of punishments to secure a return to discipline
+2, 60, 65, you promise everyone booze, sex, and constant parties in exchange for strict discipline
+2, 61, 61B, you win (battling Fighting: Sleeping General)
+2, 61B, 64, you insist on a new system of punishments to secure a return to discipline
+2, 61B, 65, you promise everyone booze, sex, and constant parties in exchange for strict discipline
+2, 62, 63, you insist that this is a celestial punishment, and that they will only be saved by your guidance
+2, 62, 64, you confess to everything and tell people to stop drinking the water
+2, 63, 63B, you win (battling Wits: Dying People)
+2, 63B, 72, (always)
+2, 64, 66, you leap into the fray
+2, 64, 72, you hide in a bunker till things cool down, then emerge and claim credit for stopping the riot
+2, 65, 70, you fight
+2, 65, 71, you refuse to to fight
+2, 66, 68, you fire indiscriminately
+2, 66, 69, you fire discriminately
+2, 68, 72, you win (battling Wits: Speech)
+2, 69, 72, (always); charisma +3
+2, 70, 73, you win (battling Fighting: Young Upstart); charisma -3
+2, 71, 67, you refuse
+2, 71, 74, you drink up
+2, 72, 77, (always)
+2, 73, 76, (always); charisma +1
+2, 74, 75, you win (battling Wits: Standing)
+2, 75, 77, (always); charisma +2
+2, 76, 79, (always)
+2, 77, 79, (always); fighting -5
+2, 79, 80, you win (battling Fighting: Rebel Assault Force)
+2, 80, 81, you have ever captained a starship, and wish to do so again;
+2, 80, 82, you have the Erotic Ring;
+2, 80, 83, you wish to attack on land;
+2, 81, 84, you win (battling Wits: Missiles)
+2, 82, 90, (always)
+2, 83, 85, you win (battling Fighting: Goodsiders)
+2, 84, 86, you hold out your hand and will the missile to stop
+2, 84, 87, you run away
+2, 85, 88,  you duck
+2, 85, 89, you focus your mind, harness The Energy, and turn back electromagnetic radiation itself
+2, 87, 87B, you are a medic
+2, 87, 90, not
+2, 87B, 90, (always); charisma -2
+2, 88, 90, (always)
+2, 90, 91, you win (battling Fighting: Goodsiders)
+2, 91, 92, you win
+2, 91, 92, you lose
+2, 92, 93, you ride with the President
+2, 92, 94, you ride with the Vice President
+2, 93, 95, you touch it, ‘cause like, fuck him, amiright?”
+2, 93, 96, you pull back
+2, 94, 97, (always); hp -3
+2, 96, 97, (always)
+2, 97, 98, (always)
+
+item: hp +0: monkey style
+item: hp +0: president's gun
+item: hp +0: vice president's gun
+
+3, 5, battle: fighting =2; hp =7: Goat Creature
+3, 8, battle: fighting =2; hp =12: Bounty Hunters
+3, 9, battle: wits =3: Surgery
+3, 11, battle: wits =5: Own Brain
+3, 23, battle: fighting =3; hp =11: Celibate Monks
+3, 25, battle: wits =6: Public Speaking
+3, 26, battle: fighting =2; hp =11: Angry Celibates
+3, 28, battle: fighting =2; hp =16: Monks
+3, 32, battle: wits =7: Controls
+3, 37, battle: fighting =3; hp =16: Monks
+3, 40, gameover
+4, 44B, gameover
+3, 45, battle: fighting =3; hp =8: Poachers
+3, 47, battle: fighting =-1; hp =1: Joe
+3, 49C, battle: fighting =1; hp =6: Logician
+3, 52, gameover
+3, 57, battle: fighting =-1; hp =1: Suicidal Joe
+3, 60, this: fighting -5
+3, 60, battle: fighting =4; hp =4: Monkeys with Swords
+3, 68, this: wits +5
+3, 68, battle: wits =13: Nasrat
+3, 71, battle: fighting =-1; hp =1: Suicidal Joe
+3, 76, this: you are an engineer; wits +10
+3, 76, battle: wits =9: Puzzle
+3, 81, battle: fighting =4; hp =16: Jesus Christ on a Lizard
+3, 86, gameover
+3, 87, battle: fighting =3; hp =6: Native Champion
+3, 88, battle: wits =4: Shrooms
+3, 89, battle: fighting =2; hp =8: Man in Uniform
+3, 90, battle: fighting =3; hp =6: Knife-Monkeys
+3, 92, battle: wits =1: Marijuana
+3, 100, battle: fighting =1; hp =2: Friendly Helpful Elderly Man
+3, 108, battle: fighting =2; hp =6: Metaphor for self as embodied in a rottweiler
+3, 112, battle: fighting =3; hp =8: Beastkeeper
+3, 114, this: fighting -3
+3, 114, battle: fighting =1; hp =2: Dark Figure
+3, 117, battle: fighting =1; hp =1: goodsider
+3, 125, battle: fighting =3; hp =6: Varlataneme Guards.
+3, 132, battle: fighting =2; hp =4: First monk.
+3, 133, battle: fighting =3; hp =6: Second Monk
+3, 134, battle: fighting =3; hp =8: Third Monk
+3, 145, this: fighting +20
+3, 144, battle: fighting =16; hp =30: Varlata
+3, 145, battle: fighting =16; hp =30: Varlata
+3, 153, battle: fighting =2; hp =5: Knife-wielding fish
+3, 157, battle: wits =8: Stupidity
+3, 160, battle: fighting =1; hp =4: Sleeping Man.
+3, 166, this: you have pilot aspect; fighting +10
+3, 166, battle: fighting =3; hp =14; wits =4: Imperial Police
+3, 88B, minigame: statmash: pick a rand # for each stat if 0-4= -3 that stat 5-9 = +3
+3, 15, gameover
+3, 29, gameover
+3, 49B, gameover
+3, 58B, gameover
+3, 62, gameover
+3, 70, gameover
+3, 72, gameover
+3, 107, gameover
+3, 118, gameover
+3, 130, gain Vice President's Gun
+3, 136, gameover
+3, 138, gameover
+3, 140, gameover
+3, 154, gameover
+3, 146, gameover
+3, 161, gameover
+3, 169, nextact
+3, 170, gameover
+
+3, 1, 2, (always)
+3, 2, 3, you wish to bunk with the bounty hunters
+3, 2, 4, you wish to bunk with the monks
+3, 3, 5, you ignite your plasmaster and do battle
+3, 3, 6, you decide to deflect the knife with your neck
+3, 4, 7, you wish to join the celibate monks
+3, 4, 10, you are optionally a fighter
+3, 5, 8, you win (battling Fighting: Goat Creature)
+3, 5, 9, you're a medic (battling Fighting: Goat Creature)
+3, 6, 5, (always); hp -7
+3, 7, 11, you are an engineer
+3, 7, 39,
+3, 8, 12, you win (battling Fighting: Bounty Hunters)
+3, 9, 8, you lose (battling Wits: Surgery)
+3, 9, 13, you win (battling Wits: Surgery)
+3, 10, 14, you choose to call him out on his use of “literally”
+3, 10, 15, you choose not to be a dick about his use of “literally,”
+3, 11, 3, you lose (battling Wits: Own Brain)
+3, 11, 16, you win (battling Wits: Own Brain)
+3, 12, 17, (always); hp -5
+3, 13, 18, you decide to learn from the Warrior Monks
+3, 13, 37, you decide to check on the flame surrounding the ship
+3, 14, 23, (always)
+3, 16, 20, (always)
+3, 17, 21, you eat the navigator
+3, 17, 22, you eat the old hobo
+3, 18, 23, (always)
+3, 19, 23, (always)
+3, 20, 23, you fight them
+3, 20, 25, you try to convince them the Varlata will be a way better way to die
+3, 21, 26, you head to the bridge to see what's going on
+3, 21, 27, you focus inward on The Energy, and reach out with your feelings
+3, 22, 28, you look out the window to see what's up; charisma +10
+3, 22, 29, you say “where does a cow go to see historical artifacts,”; charisma +10
+3, 23, 30, you win (battling Fighting: Celibate Monks)
+3, 24, 31, you remain celibate
+3, 24, 40, you go for the fivesome
+3, 25, 24, you win (battling Wits: Public Speaking)
+3, 26, 38, you win (battling Fighting: Angry Celibates); hp -1
+3, 27, 28, (always)
+3, 28, 32, you win (battling Fighting: Monks); fighting +10
+3, 30, 34, (always)
+3, 31, 38, (always)
+3, 32, 36, you win (battling Wits: Controls); wits +3
+3, 34, 38, (always)
+3, 36, 38, (always)
+3, 37, 32, you win, take the controls and (battling Fighting: Monks)
+3, 38, 40B, you decide to go it alone
+3, 38, 42, you join the monks
+3, 39, 11, (always); charisma -5
+3, 40B, 43, you talk to him
+3, 40B, 44, you ignore him and trudge on
+3, 41, 64, (always)
+3, 42, 45, you go with the Warrior Monks
+3, 42, 46, you go with the Celibates
+3, 43, 47, you slap the drink out of his hand
+3, 43, 48, you drink it
+3, 44, 44B, (always)
+3, 44B, 49, (always)
+3, 45, 50, you win (battling Fighting: Poachers); fighting +10
+3, 46, 51, you punch yourselves in the genitals and trudge on
+3, 46, 52, you join the natives
+3, 47, 53, (always)
+3, 48, 53, hp +5
+3, 49, 49B, you think [possibility 1]  is true
+3, 49, 49C, you think it's time for this riddling asshole to die
+3, 49, 54, you think [possibility 2] is true
+3, 49C, 49D, you win (battling Fighting: Logician)
+3, 49D, 55, gain Monkey Style
+3, 49D, 59, you continue on your own
+3, 50, 46, you join him because, strictly speaking, he's right about you
+3, 50, 55, you kill him
+3, 51, 56, you let him lead the troupe
+3, 51, 57, you challenge him for leadership
+3, 53, 58, you are a medic; charisma +3
+3, 53, 58, otherwise
+3, 54, 59, (always)
+3, 55, 60, (always)
+3, 56, 61, (always)
+3, 56, 62, (always)
+3, 57, 63, (always)
+3, 58, 58B, you decide to kill Joe
+3, 58, 64, you urge him to come along with you
+3, 59, 41, you don't stop him
+3, 59, 70, you stop him
+3, 60, 65, you win (battling Fighting: Monkeys with Swords);
+3, 61, 74, (always)
+3, 63, 67, (always); charisma +3
+3, 64, 68, you fight the Nasrat personally
+3, 64, 69, you push Joe forward
+3, 65, 71, (always)
+3, 67, 71B, you shove Joe into the golem
+3, 67, 72, you focus inward and use The Energy to set things right
+3, 68, 73, you win (battling Wits: Nasrat);
+3, 69, 74, (always)
+3, 71, 75, you win (battling Fighting: Suicidal Joe)
+3, 71B, 76, (always); charisma -6
+3, 73, 74, (always)
+3, 74, 76, (always)
+3, 75, 76, (always); hp -5
+3, 76, 76B, you win (battling Wits: Puzzle);
+3, 76B, 77, (always)
+3, 77, 78, you hop into the river
+3, 77, 79, you enter the temple
+3, 78, 82, you head to the jungle; hp -5
+3, 78, 83, you head to the village; hp -5
+3, 79, 81, (always)
+3, 81, 84, you win (battling Fighting: Jesus Christ on a Lizard)
+3, 82, 85, (always); you're a medic; hp -3
+3, 82, 85, (always); you're a engineer; hp -3
+3, 82, 85, (always); you're a soldier
+3, 83, 86, you run in terror
+3, 83, 87, you stand your ground
+3, 84, 88, you examine the crack
+3, 84, 89, you tell Joe to fuck off
+3, 85, 90, you have not
+3, 85, 91, you have ever fought monkeys armed with cutlery before
+3, 87, 87B, you win (battling Fighting: Native Champion); hp -2
+3, 87B, 92, (always)
+3, 88, 88B, you win (battling Wits: Shrooms)
+3, 88B, 92, you win
+3, 88B, 92, you lose
+3, 89, 95, you lose (battling Fighting: Man in Uniform)
+3, 89, 96, you win (battling Fighting: Man in Uniform)
+3, 90, 94, you win (battling Fighting: Knife-Monkeys)
+3, 91, 97, (always)
+3, 92, 101, you win (battling Wits: Marijuana)
+3, 94, 97, (always)
+3, 95, 110, (always)
+3, 96, 102, (always)
+3, 97, 99, you train
+3, 97, 100, you attack him
+3, 98, 102, (always)
+3, 99, 103, (always)
+3, 100, 104, you win (battling Fighting: Friendly Helpful Elderly Man)
+3, 101, 97, you wish to go to the hut of the Goodside Master; hp -3, charisma +1
+3, 101, 98, you wish to head back to the caverns; hp -3, charisma +1
+3, 102, 105, you are a medic
+3, 102, 106, you are a fighter
+3, 102, 113, you are an engineer
+3, 103, 107, you choose to gather up The Energy and face this representation of your inner self
+3, 103, 108, you decide to fight this representation of your inner self
+3, 104, 109, (always)
+3, 105, 110, (always); hp -1, hp -10
+3, 106, 110, (always); wits +3, hp -10
+3, 108, 111, you win (battling Fighting: Metaphor for self as embodied in a rottweiler)
+3, 109, 112, (always)
+3, 110, 112, (always)
+3, 111, 114, you fight
+3, 111, 115, you run
+3, 112, 120, you win (battling Fighting: Beastkeeper)
+3, 113, 120, (always); hp -5
+3, 114, 117, you win (battling Fighting: Dark Figure)
+3, 115, 118, you nobly sacrifice yourself to join your Master in the great beyond
+3, 115, 119, you attack the dark figure for vengeance's sake
+3, 117, 123, you win (battling Fighting: goodsider)
+3, 119, 121, (always); hp -3
+3, 120, 122, (always)
+3, 121, 120, (always)
+3, 122, 125, you stand your ground
+3, 122, 126, you flee
+3, 123, 124, not
+3, 123, 130, you have the President's Gun
+3, 124, 122, (always)
+3, 125, 129, you win (battling Fighting: Varlataneme Guards.)
+3, 126, 128, (always)
+3, 128, 131, (always); hp -3
+3, 129, 128, (always)
+3, 130, 122, (always)
+3, 131, 132, (always); charisma -3
+3, 132, 133, you win (battling Fighting: First monk.)
+3, 133, 134, you win (battling Fighting: Second Monk)
+3, 134, 135, you win (battling Fighting: Third Monk)
+3, 135, 137, (always)
+3, 137, 136, you say “Man”
+3, 137, 139, you say “cow who loses a leg in the middle of the day, then gets it back, and all its legs are made of poison,”
+3, 139, 138, you say “Day and Night”
+3, 139, 141, you say “Two ladies with giant vaginas,”
+3, 141, 140, you say “Because 7, 8, 9,”
+3, 141, 142, you say “Hyperactivity of the amygdala,”
+3, 142, 143, you have the President's Gun and wish to use it
+3, 142, 144,
+3, 142, 145, you have the Vice President's Gun and wish to use it
+3, 143, 146, you fire the gun
+3, 143, 147, you throw the gun at the beast's face
+3, 144, 148, you win
+3, 144, 148, you lose
+3, 145, 149, you win (battling Fighting: Varlata)
+3, 147, 150, (always)
+3, 148, 150, (always); hp =1
+3, 149, 150, (always)
+3, 150, 152, you run for the door
+3, 150, 153, you head into the darkness
+3, 152, 154, you use The Energy to halt the ball
+3, 152, 155, you take out Suicidal Joe and heave him at the ball
+3, 153, 157, you win (battling Fighting: Knife-wielding fish)
+3, 155, 156, you wait for it to clear out a path
+3, 155, 158, you run after the boulder
+3, 156, 159, you are an engineer and wish to think like one
+3, 156, 160, you run
+3, 157, 157B, you lose (battling Wits: Stupidity)
+3, 157, 171, you win (battling Wits: Stupidity)
+3, 157B, 160, (always)
+3, 158, 160, you run
+3, 158, 161, you stand your ground
+3, 159, 162, (always);
+3, 160, 163, you win (battling Fighting: Sleeping Man.); hp -10
+3, 162, 164, you do not
+3, 162, 170, you have the erotic ring and wish to show it
+3, 163, 165, you surrender
+3, 163, 166, you fire your guns
+3, 164, 169, (always)
+3, 165, 167, (always); hp -3
+3, 166, 168, you win (battling Fighting and Wits: Imperial Police)
+3, 167, 169, (always)
+3, 168, 167, you tell them who you are and say it was all a funny joke and that you hope police officers have a sense of humor
+3, 168, 170, you have the erotic ring and want to show it
+3, 171, 162, (always)
+
+4, 3, battle: fighting =1; hp =3: VP's Ambush
+4, 4, battle: wits =11: VP's fleet
+4, 10, battle: wits =10: Command Ship
+4, 14, battle: wits =20: Manadu
+4, 15, battle: wits =13: Brigands
+4, 16, battle: fighting =0; hp =20: Robots
+4, 22, battle: fighting =0; hp =20: Robots
+4, 25, battle: wits =10: VP ships.
+4, 26, battle: fighting =0; hp =20: Robots Yet Again
+4, 36, this: wits =1; fighting =1; charisma =1
+4, 36, battle: fighting =3; hp =10: Suicidal Joe
+4, 14, this: wits +10
+4, 9, gameover
+4, 38, gameover
+4, 42, nextact
+
+4, 1, 2, otherwise
+4, 2, 3, you wish to take a massive armada of warships
+4, 2, 4, you wish to take a small strikeforce
+4, 3, 5, you win (battling Fighting: VP’s Ambush)
+4, 4, 6, you win (battling Wits: VP's fleet)
+4, 5, 8, you wish to send part of your force to fight them
+4, 5, 10, you wish to go alone in secret to attack their command ship
+4, 6, 9, you report this strange incident to the President
+4, 6, 11, you continue on
+4, 7, 19,
+4, 7, 26,
+4, 8, 11, (always)
+4, 10, 8, you lose;
+4, 10, 8, you lose; you are an engineer; wits +5
+4, 10, 12, you win
+4, 10, 12, you win; you are an engineer; wits +5
+4, 11, 14, TK; you have Starfighter aspect and wish to go through the asteroids
+4, 11, 15, TK; otherwise
+4, 12, 16, you fight them
+4, 12, 19, you surrender
+4, 13, 27, (always); hp -5
+4, 14, 28, you win (battling Wits: Manadu);
+4, 15, 17, you win (battling Wits: Brigands)
+4, 16, 18, you win (battling Fighting: Robots)
+4, 17, 25, (always)
+4, 18, 19, you lay down your arms and ask just what the hell is going on
+4, 18, 22, you continue fighting
+4, 19, 23, you take the key and escape
+4, 19, 34, you decide to stay put
+4, 22, 7, you win (battling Fighting: Robots)
+4, 23, 27, (always)
+4, 25, 28, (always)
+4, 26, 32, you win (battling Fighting: Robots Yet Again)
+4, 27, 31, (always);
+4, 27, 31, you have starfighter aspect; hp -5
+4, 28, 30, (always)
+4, 30, 31, (always)
+4, 31, 35, (always); hp -5;
+4, 32, 33, (always)
+4, 33, 31, (always)
+4, 34, 13, you stay put
+4, 34, 23, you take the items and escape
+4, 35, 36, you do battle
+4, 35, 37, you refuse to fight Joe
+4, 36, 38, you win (battling Fighting: Suicidal Joe)
+4, 36, 39, you lose (battling Fighting: Suicidal Joe)
+4, 37, 42, (always)
+4, 39, 42, (always)
+
+5, 10, this: wits =1
+5, 10, battle: wits =5: Urge toward stupid
+5, 16, this: fighting +10
+5, 16, battle: fighting =7; hp =50: High Guards
+5, 6, gameover
+5, 9, gameover
+5, 11, gameover
+5, 13, gameover
+5, 22, win
+5, 23, win
+5, 24, gameover
+
+5, 1, 2, otherwise
+5, 1, 3, (always)
+5, 2, 4, you keep your mouth shut
+5, 2, 5, you spin the word cockup into a joke about his mother
+5, 3, 6, you decide to help out
+5, 3, 7, you wait for the VP to act
+5, 4, 10, (always)
+5, 5, 8, you say you were just nervous
+5, 5, 11, you make the pun
+5, 7, 12, you don’t
+5, 7, 13, you try to dodge the generator unit as it falls toward you
+5, 8, 7, (always)
+5, 10, 9, you lose (battling Wits: Urge toward stupid)
+5, 10, 14, you win (battling Wits: Urge toward stupid)
+5, 12, 14, (always)
+5, 14, 15, (always) ;TK all stats restored to previous level before they were reduced to 1, fighting +5, wits +5, charisma +5
+5, 15, 16, you throw him a regular plasmaster
+5, 15, 17, you have a goodsider plasmaster and wish to use it
+5, 16, 18, you win (battling Fighting: High Guards)
+5, 17, 20, (always); charisma -3
+5, 18, 22, (always)
+5, 20, 23, you wish to spend the remainder of your life pursuing power for dark ends
+5, 20, 24, you wish to give into the pursuit of pure evil for its own sake
