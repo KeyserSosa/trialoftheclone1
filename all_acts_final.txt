@@ -1,11 +1,13 @@
 
-player: fighting =1; hp =20; wits =3; charisma =2;
+player: fighting =1; hp =20; wits =0; charisma =0;
 
 item: fighting +1: basic plasmaster
-item: fighting +2: goodsider plasmaster
 item: fighting +2: ultra blaster
-item: fighting +1: alpha ray
-item: fighting +1: beta ray
+#item: fighting +1: alpha ray
+#item: fighting +1: beta ray
+#item: fighting +0: mind-bending ray
+item: fighting +0: alpha ray
+item: fighting +0: beta ray
 item: fighting +0: mind-bending ray
 item: charisma +1: erotic ring
 item: fighting +2: mysterious chip
@@ -19,26 +21,25 @@ specialization: charisma +0: pediatrics
 specialization: wits +2: engineer
 specialization: fighting +2: fighter
 
-1, 4,  battle: fighting =1; hp =2: Frank the Goodsider;
+1, 4,  battle: fighting =1; hp =7: Frank the Goodsider;
 1, 6,  battle: fighting =1; hp =3: Nice Man
-1, 8B, battle: fighting =1; hp =5: father
-1, 10, battle: fighting =2; hp =8: professor (moderate difficulty)
-1, 15, battle: fighting =3; hp =6: Angry Moms
-1, 20, battle: fighting =1; hp =6: beard father
-1, 11, battle: wits =8: Nice Old Lady
-1, 7,  battle: wits =5: keg of inexpensive grain alcohol
-1, 46, battle: wits =8: First Incision
-1, 48, battle: wits =8: Exam Part 1
-1, 49, battle: wits =8: Surgery
-1, 54, battle: fighting =2; hp =8; wits =5: Caterpillar Jesus; TK
-1, 56, battle: wits =8: Weight Alteration
+1, 8B, battle: fighting =1; hp =9: father
+1, 10, battle: fighting =2; hp =6: professor (moderate difficulty)
+1, 15, battle: fighting =3; hp =5: Angry Moms
+1, 20, battle: fighting =1; hp =7: beard father
+1, 27, battle: fighting =3; hp =15: Gang Piranhas
+1, 11, battle: wits =2: Nice Old Lady
+1, 7,  battle: wits =1: keg of inexpensive grain alcohol
+1, 46, battle: wits =2: First Incision
+1, 48, battle: wits =4: Exam Part 1
+1, 49, battle: wits =2: Surgery
+1, 54, battle: fighting =2; hp =6; wits =2: Caterpillar Jesus; TK
+1, 56, battle: wits =3: Weight Alteration
 
 1, 4, gain Basic Plasmaster
 1, 5, gain Alpha Ray
-1, 8, gain Goodsider Plasmaster
 1, 10, gain Beta Ray
 1, 12, gain Erotic Ring
-1, 20, gain Goodsider Plasmaster
 1, 28, gain Erotic Ring
 1, 30, minigame: witrolling: 1-4 = wits +2; 5-8 = wits -2; 9 = quit; 0 = quit
 1, 32, gain mysterious chip
@@ -103,7 +104,8 @@ specialization: fighting +2: fighter
 1, 25, 37, you hire Xasktriskix
 1, 26, 38, you plan to make an impassioned speech
 1, 26, 39, gain mind-bending ray
-1, 27, 40, (always); hp =1, charisma +3
+1, 27, 40, you win; hp =5, charisma +3
+1, 27, 40, you lose; hp =5, charisma +3
 1, 28, 40, (always)
 1, 29, 40, (always); wits -3
 1, 30, 40, you lose, wits +3
@@ -143,35 +145,35 @@ specialization: fighting +2: fighter
 1, 58, 3, become medic; charisma +2, fighting -3
 1, 59, 5, become engineer
 
-2, 2, battle: charisma =7: Commander Sourek
+2, 2, battle: charisma =2: Commander Sourek
 2, 4, battle: fighting =2; hp =15: Wall
-2, 6, battle: wits =8: IQ test.
-2, 7, battle: wits =3: Cleaning
-2, 13B, battle: fighting =3; hp =6: Captain
-2, 15, battle: wits =6: Enemy Captain
-2, 19, battle: fighting =1; hp =4: Scientists
-2, 20, battle: fighting =4; hp =4: Lunchlady
+2, 6, battle: wits =2: IQ test.
+2, 7, battle: wits =2: Cleaning
+2, 13B, battle: fighting =3; hp =8: Captain
+2, 15, battle: wits =2: Enemy Captain
+2, 19, battle: fighting =1; hp =6: Scientists
+2, 20, battle: fighting =4; hp =6: Lunchlady
 2, 25, minigame: roulette: a random number is above 6
-2, 26, battle: wits =8; charisma =8: Everyone (difficult)
+2, 26, battle: wits =3; charisma =4: Everyone (difficult)
 2, 27, battle: fighting =8; hp =60: 50 armed soldiers
-2, 28, battle: fighting =1; hp =4: Goodsiders
+2, 28, battle: fighting =1; hp =6: Goodsiders
 2, 36, battle: fighting =4; hp =10: Smilnit
 2, 42, battle: fighting =4; hp =10: Man-Eating Anglerfish
 2, 46, battle: fighting =1; hp =10: 100 goodsiders
-2, 54B, battle: charisma =6: Speaking
-2, 56, battle: charisma =7: General
-2, 57, battle: wits =5: Officers
-2, 58, battle: fighting =4; hp =15: General Hovno
-2, 61, battle: fighting =1; hp =5: Sleeping General
-2, 63, battle: wits =4: Dying People
-2, 68, battle: wits =6: Speech
-2, 70, battle: fighting =2; hp =10: Young Upstart
-2, 74, battle: wits =5: Standing
-2, 79, battle: fighting =1; hp =3: Rebel Assault Force
-2, 81, battle: wits =5: Missiles
-2, 83, battle: fighting =1; hp =5: Goodsiders
-2, 90, battle: fighting =1; hp =5: Goodsiders
-2, 91, battle: fighting =10; hp =30: Master Slaboch
+2, 54B, battle: charisma =3: Speaking
+2, 56, battle: charisma =4: General
+2, 57, battle: wits =2: Officers
+2, 58, battle: fighting =3; hp =11: General Hovno
+2, 61, battle: fighting =0; hp =20: Sleeping General
+2, 63, battle: wits =2: Dying People
+2, 68, battle: wits =3: Speech
+2, 70, battle: fighting =2; hp =9: Young Upstart
+2, 74, battle: wits =3: Standing
+2, 79, battle: fighting =1; hp =7: Rebel Assault Force
+2, 81, battle: wits =3: Missiles
+2, 83, battle: fighting =1; hp =8: Goodsiders
+2, 90, battle: fighting =1; hp =8: Goodsiders
+2, 91, battle: fighting =11; hp =45: Master Slaboch
 
 item: hp +0: medi-pack
 item: hp +0: pilot aspect
@@ -249,7 +251,7 @@ item: hp +0: pilot aspect
 2, 27B, 30, (always); charisma -1
 2, 28, 31, you win (battling Fighting: Goodsiders); hp +3
 2, 29, 32, (always)
-2, 30, 26B, (always); hp=3
+2, 30, 26C, (always); hp=3
 2, 31, 31B, you follow the dying man's advice
 2, 31, 33, you are optionally an engineer
 2, 31, 31C, otherwise
@@ -347,16 +349,16 @@ item: hp +0: monkey style
 item: hp +0: president's gun
 item: hp +0: vice president's gun
 
-3, 5, battle: fighting =2; hp =7: Goat Creature
-3, 8, battle: fighting =2; hp =12: Bounty Hunters
+3, 5, battle: fighting =2; hp =8: Goat Creature
+3, 8, battle: fighting =1; hp =10: Bounty Hunters
 3, 9, battle: wits =3: Surgery
-3, 11, battle: wits =5: Own Brain
-3, 23, battle: fighting =3; hp =11: Celibate Monks
-3, 25, battle: wits =6: Public Speaking
-3, 26, battle: fighting =2; hp =11: Angry Celibates
-3, 28, battle: fighting =2; hp =16: Monks
-3, 32, battle: wits =7: Controls
-3, 37, battle: fighting =3; hp =16: Monks
+3, 11, battle: wits =3: Own Brain
+3, 23, battle: fighting =1; hp =9: Celibate Monks
+3, 25, battle: wits =4: Public Speaking
+3, 26, battle: fighting =2; hp =9: Angry Celibates
+3, 28, battle: fighting =2; hp =8: Monks
+3, 32, battle: wits =3: Controls
+3, 37, battle: fighting =3; hp =8: Monks
 3, 40, gameover
 4, 44B, gameover
 3, 45, battle: fighting =3; hp =8: Poachers
@@ -365,37 +367,37 @@ item: hp +0: vice president's gun
 3, 52, gameover
 3, 57, battle: fighting =-1; hp =1: Suicidal Joe
 3, 60, this: fighting -5
-3, 60, battle: fighting =4; hp =4: Monkeys with Swords
+3, 60, battle: fighting =4; hp =8: Monkeys with Swords
 3, 68, this: wits +5
-3, 68, battle: wits =13: Nasrat
+3, 68, battle: wits =9: Nasrat
 3, 71, battle: fighting =-1; hp =1: Suicidal Joe
 3, 76, this: you are an engineer; wits +10
-3, 76, battle: wits =9: Puzzle
-3, 81, battle: fighting =4; hp =16: Jesus Christ on a Lizard
+3, 76, battle: wits =4: Puzzle
+3, 81, battle: fighting =4; hp =13: Jesus Christ on a Lizard
 3, 86, gameover
-3, 87, battle: fighting =3; hp =6: Native Champion
+3, 87, battle: fighting =3; hp =8: Native Champion
 3, 88, battle: wits =4: Shrooms
-3, 89, battle: fighting =2; hp =8: Man in Uniform
-3, 90, battle: fighting =3; hp =6: Knife-Monkeys
+3, 89, battle: fighting =2; hp =10: Man in Uniform
+3, 90, battle: fighting =3; hp =8: Knife-Monkeys
 3, 92, battle: wits =1: Marijuana
-3, 100, battle: fighting =1; hp =2: Friendly Helpful Elderly Man
-3, 108, battle: fighting =2; hp =6: Metaphor for self as embodied in a rottweiler
-3, 112, battle: fighting =3; hp =8: Beastkeeper
+3, 100, battle: fighting =1; hp =8: Friendly Helpful Elderly Man
+3, 108, battle: fighting =2; hp =12: Metaphor for self as embodied in a rottweiler
+3, 112, battle: fighting =1; hp =10: Beastkeeper
 3, 114, this: fighting -3
-3, 114, battle: fighting =1; hp =2: Dark Figure
-3, 117, battle: fighting =1; hp =1: goodsider
-3, 125, battle: fighting =3; hp =6: Varlataneme Guards.
-3, 132, battle: fighting =2; hp =4: First monk.
-3, 133, battle: fighting =3; hp =6: Second Monk
-3, 134, battle: fighting =3; hp =8: Third Monk
+3, 114, battle: fighting =1; hp =8: Dark Figure
+3, 117, battle: fighting =1; hp =12: goodsider
+3, 125, battle: fighting =3; hp =14: Varlataneme Guards.
+3, 132, battle: fighting =0; hp =12: First monk.
+3, 133, battle: fighting =1; hp =14: Second Monk
+3, 134, battle: fighting =2; hp =16: Third Monk
 3, 145, this: fighting +20
-3, 144, battle: fighting =16; hp =30: Varlata
-3, 145, battle: fighting =16; hp =30: Varlata
-3, 153, battle: fighting =2; hp =5: Knife-wielding fish
-3, 157, battle: wits =8: Stupidity
-3, 160, battle: fighting =1; hp =4: Sleeping Man.
+3, 144, battle: fighting =15; hp =40: Varlata
+3, 145, battle: fighting =15; hp =40: Varlata
+3, 153, battle: fighting =0; hp =10: Knife-wielding fish
+3, 157, battle: wits =6: Stupidity
+3, 160, battle: fighting =0; hp =14: Sleeping Man.
 3, 166, this: you have pilot aspect; fighting +10
-3, 166, battle: fighting =3; hp =14; wits =4: Imperial Police
+3, 166, battle: fighting =1; hp =24; wits =3: Imperial Police
 3, 88B, minigame: statmash: pick a rand # for each stat if 0-4= -3 that stat 5-9 = +3
 3, 15, gameover
 3, 29, gameover
@@ -635,17 +637,17 @@ item: hp +0: vice president's gun
 3, 168, 170, you have the erotic ring and want to show it
 3, 171, 162, (always)
 
-4, 3, battle: fighting =1; hp =3: VP's Ambush
-4, 4, battle: wits =11: VP's fleet
-4, 10, battle: wits =10: Command Ship
-4, 14, battle: wits =20: Manadu
-4, 15, battle: wits =13: Brigands
-4, 16, battle: fighting =0; hp =20: Robots
-4, 22, battle: fighting =0; hp =20: Robots
+4, 3, battle: fighting =1; hp =40: VP's Ambush
+4, 4, battle: wits =8: VP's fleet
+4, 10, battle: wits =7: Command Ship
+4, 14, battle: wits =15: Manadu
+4, 15, battle: wits =9: Brigands
+4, 16, battle: fighting =0; hp =40: Robots
+4, 22, battle: fighting =0; hp =40: Robots
 4, 25, battle: wits =10: VP ships.
-4, 26, battle: fighting =0; hp =20: Robots Yet Again
+4, 26, battle: fighting =0; hp =50: Robots Yet Again
 4, 36, this: wits =1; fighting =1; charisma =1
-4, 36, battle: fighting =3; hp =10: Suicidal Joe
+4, 36, battle: fighting =2; hp =9: Suicidal Joe
 4, 14, this: wits +10
 4, 9, gameover
 4, 38, gameover
@@ -701,9 +703,9 @@ item: hp +0: vice president's gun
 4, 39, 42, (always)
 
 5, 10, this: wits =1
-5, 10, battle: wits =5: Urge toward stupid
+5, 10, battle: wits =3: Urge toward stupid
 5, 16, this: fighting +10
-5, 16, battle: fighting =7; hp =50: High Guards
+5, 16, battle: fighting =9; hp =60: High Guards
 5, 6, gameover
 5, 9, gameover
 5, 11, gameover
@@ -727,9 +729,9 @@ item: hp +0: vice president's gun
 5, 10, 9, you lose (battling Wits: Urge toward stupid)
 5, 10, 14, you win (battling Wits: Urge toward stupid)
 5, 12, 14, (always)
-5, 14, 15, (always) ;TK all stats restored to previous level before they were reduced to 1, fighting +5, wits +5, charisma +5
+5, 14, 15, fighting +5, wits +5, charisma +5
 5, 15, 16, you throw him a regular plasmaster
-5, 15, 17, you have a goodsider plasmaster and wish to use it
+5, 15, 17,
 5, 16, 18, you win (battling Fighting: High Guards)
 5, 17, 20, (always); charisma -3
 5, 18, 22, (always)

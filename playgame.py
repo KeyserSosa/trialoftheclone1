@@ -4,9 +4,6 @@
 Remaining todos:
  * rays generate status on enemy
  * missing some inventory items
- * handle TK
- * engineer is +2 wits, fighter is +1 fighting, medic is +1 wits +1 char.
- * how many back-forth in a battle
 """
 
 import math
@@ -21,12 +18,12 @@ else:
     logger.basicConfig(level = logging.INFO)
 
 import os
-import pydot
-from random import choice
+#import pydot
+from random import choice, shuffle
 
 
 MINROLL = 0
-MAXROLL = 9
+MAXROLL = 3
 
 
 def roll():
@@ -48,7 +45,7 @@ def spectrum(fr, to, frac):
 
 
 class Player():
-    fight_roll_multiplier = 1. / 3
+    fight_roll_multiplier = 1.
     wits_roll_multiplier = 1.
 
     def __init__(self, hp = 1, wits = 1, charisma = 1, fighting = 1):
@@ -114,7 +111,8 @@ class Transform(object):
         name = self.__class__.__name__.lower()
         if name.lower().endswith("transform"):
             name = name[:-9]
-        return "[%s:%s]" % (name, self._what_repr())
+        #return "[%s:%s]" % (name, self._what_repr())
+        return self._what_repr()
 
     def _what_repr(self):
         return self.what
@@ -155,7 +153,7 @@ class QualityTransform(Transform):
         setattr(person, self.what, v)
 
     def _what_repr(self):
-        return "%s%s%s" % (self.what, self.kind, self.val)
+        return "%s %s%s" % (self.what, self.kind, self.val)
 
     @classmethod
     def parse(cls, s):
@@ -429,7 +427,7 @@ class Battle(object):
             kind.append("W")
         if self.charisma:
             kind.append("C")
-        return "[Battle %s (%s)]" % (self.who, ",".join(kind))
+        return "Battle %s" % self.who
 
     @classmethod
     def parse(cls, label, act):
@@ -544,21 +542,21 @@ class Minigame(object):
     def do_statmash(self, player):
         for k in ("fighting", "wits", "charisma", "hp"):
             v = getattr(player, k)
-            if roll() < 5:
+            if roll() < 2:
                 setattr(player, k, v - 3)
             else:
                 setattr(player, k, v + 3)
 
     def do_roulette(self, player):
-        return (roll() > 6)
+        return (roll() >= 2)
 
     def do_witrolling(self, player):
         wits = 0
         while True:
             r = roll()
-            if 1 <= r <= 4:
+            if r == 1:  #1 <= r <= 4:
                 wits += 2
-            elif 5 < r <= 8:
+            elif r == 2:  #5 < r <= 8:
                 wits -= 2
             else:
                 break
@@ -638,38 +636,44 @@ class Node(object):
 
     def draw(self, graph, n = 0):
         kw = {}
-        if self.label == '1':
-            kw = dict(fillcolor = "green", style = "filled")
-        elif isinstance(self.game, Battle):
-            if self.game.nbattles:
+        if self.label.endswith('.1'):
+            kw.update(dict(fillcolor = "green", style = "filled"))
+        elif self.game:
+            if getattr(self.game, "nbattles", 0):
                 winpct = float(self.game.nwins) / self.game.nbattles
+                color = spectrum((255, 0, 0), (0, 255, 0), winpct)
+                if getattr(self.game, "fight"):
+                    kw['shape'] = "rectangle"
             else:
                 winpct = .5
-            color = spectrum((255, 0, 0), (0, 255, 0), winpct)
-            kw = dict(fillcolor = color, style = "filled")
-            if getattr(self.game, "fight"):
+                color = "#75B0CF"
                 kw['shape'] = "rectangle"
+            kw.update(dict(fillcolor = color, style = "filled"))
         if self.traversed < .002 * n:
             if not kw.get('fillcolor'):
                 kw['fillcolor'] = "yellow"
             kw['style'] = 'filled'
+        kw['fontsize'] = 30
         graph.add_node(pydot.Node(self.label, **kw))
 
 
 class LosingNode(Node):
     def draw(self, graph, n = 0):
+        return
         graph.add_node(pydot.Node(self.label, fillcolor = "red",
-                                  style = "filled", shape = "rectangle"))
+                                  style = "filled", shape = "octagon"))
 
 
 class WinningNode(Node):
     def draw(self, graph, n = 0):
         graph.add_node(pydot.Node(self.label, fillcolor = "green",
+                                  fontsize = 50,
                                   style = "filled", shape = "rectangle"))
 
 
 class NextNode(Node):
     def draw(self, graph, n = 0):
+        return
         graph.add_node(pydot.Node(self.label, fillcolor = "cyan",
                                   style = "filled", shape = "rectangle"))
 
@@ -677,6 +681,7 @@ class NextNode(Node):
 LOSE = LosingNode("LOSE")
 END = LosingNode("GAME OVER")
 WIN = WinningNode("WIN")
+START = WinningNode("START")
 NEXT = NextNode("NEXT")
 
 
@@ -726,14 +731,21 @@ class Transition(object):
                 return True
         return False
 
-    def draw(self, graph, n = 0):
+    def draw(self, graph, n = 0, next = None):
         kw = {"dir": "forward"}
-        if self.to is END:
-            kw['color'] = "orange"
-        elif self.to is LOSE:
+        if self.to.label.endswith(END.label):
             kw['color'] = "red"
+            kw['weight'] = 1
+            return
+        elif self.to.label.endswith(LOSE.label):
+            kw['weight'] = 0
+            kw['color'] = "red"
+            return
         elif self.is_winning:
-            kw['color'] = "green"
+            kw['color'] = "#008020"
+        elif self.is_losing:
+            kw['weight'] = 1
+            kw['color'] = "red"
 
         if n:
             frac = float(self.traversals) / n
@@ -752,12 +764,19 @@ class Transition(object):
                 kw['label'] = "  %d%%  " % int(frac * 100)
 
         if self.restrictions:
-            kw['label'] = " - ".join([kw.get('label', ""),
-                                      str(self.restrictions)])
+            kw['label'] = "".join([kw.get('label', ""),
+                                   str(self.restrictions)])
         elif self.transforms:
-            kw['label'] = " - ".join([kw.get('label', ""),
-                                      str(self.transforms)])
-        edge = pydot.Edge(self.fr.label, self.to.label, **kw)
+            kw['label'] = "".join([kw.get('label', ""),
+                                   str(self.transforms)])
+        if 'label' in kw:
+            kw['label'] = kw['label'].replace("[", "").replace("]", "")
+        to_label = self.to.label
+        if self.to.label == NEXT.label and next is not None:
+            to_label = next.label
+            kw['penwidth'] = 20
+            kw['weight'] = 1
+        edge = pydot.Edge(self.fr.label, to_label, **kw)
         graph.add_edge(edge)
 
     def apply(self, player):
@@ -769,16 +788,26 @@ class Transition(object):
 class Act(object):
     def __init__(self, act):
         self.act = act
-        self.nodes = {"LOSE": LOSE, "GAME OVER": END}
+        self.roman = {'1': "i",
+                      '2': "ii",
+                      '3': "iii",
+                      '4': "iv",
+                      '5': "v"}[act]
+        # TODO: hack here
+        self.nodes = {"LOSE": LOSE, "GAME OVER": END, "NEXT": NEXT}
+        self.first_node = None
         self.transitions = []
         self.map = {}
         self.lose_map = {}
         self.nsimulations = 0
 
     def __getitem__(self, k):
-        if k not in self.nodes:
-            self.nodes[k] = Node(k, self.act)
-        return self.nodes[k]
+        newk = ".".join([self.roman, k])
+        if k not in self.nodes and newk not in self.nodes:
+            self.nodes[newk] = Node(newk, self.act)
+            if k == "1":
+                self.first_node = self.nodes[newk]
+        return self.nodes.get(newk, self.nodes.get(k))
 
     def add(self, fr, to, label = None):
         fr = self[fr] if not isinstance(fr, Node) else fr
@@ -808,7 +837,7 @@ class Act(object):
         else:
             node.apply(player)
             # "enhance" winning paths to improve overall statistics
-            for i in range(2):
+            for i in range(4):
                 allowed = [x for x in (self.map.get(node, []) +
                                        self.lose_map.get(node, []))
                            if x.allowed(player)]
@@ -829,16 +858,21 @@ class Act(object):
     def add_losing(self, fr):
         self.add(fr, "LOSE")
 
-    def draw(self, path = "/tmp"):
-        graph = pydot.Dot(graph_type = 'graph')
+    def draw(self, path = "/tmp", graph = None, next = None):
+        save = False
+        if graph is None:
+            graph = pydot.Dot(size = "10,8", page = "10,8",
+                              graph_type='digraph',fontname="Verdana")
+            save = True
 
         for node in self.nodes.values():
             node.draw(graph, self.nsimulations)
 
         for transition in self.transitions:
-            transition.draw(graph, self.nsimulations)
+            transition.draw(graph, self.nsimulations, next = next)
 
-        graph.write_png(os.path.join(path, "act%s.png" % self.act))
+        if save:
+            graph.write_pdf(os.path.join(path, "act%s.pdf" % self.act))
 
     def has_losing(self, node):
         if not isinstance(node, Node):
@@ -856,6 +890,37 @@ class Act(object):
                 for n in self.map.get(node, []):
                     if not n.is_losing:
                         n.is_winning = True
+
+    def randomize(self):
+        """
+        Randomize the scenes
+        """
+        nodes = []
+        ends = []
+        for n in self.nodes.values():
+            if n is not LOSE and n is not END and not n.label.endswith(NEXT.label):
+                label, _, _ = n.label.partition(" ")
+                label = label.split('.')[-1]
+                if n in self.map:
+                    if self.map[n][0].to in (NEXT, WIN) or self.map[n][0].to.label.endswith(NEXT.label):
+                        ends.append(label)
+                        continue
+                nodes.append(label)
+        nodes.append("")
+        nodes = list(set(nodes))
+        nodes.sort(key = lambda x: (x and int(''.join(y for y in x if y.isdigit())),
+                                  ''.join(y for y in x if not y.isdigit())))
+        newnums = range(2, len(nodes) + 1)
+        shuffle(newnums)
+        newnums = [1] + newnums
+        res = []
+        for x, y in zip(nodes, newnums):
+            res.append((self.act, x, y, roll()))
+        for i, x in enumerate(ends):
+            res.append((self.act, x, len(nodes) + i + 1, roll()))
+        res.sort(key = lambda x: (x[1] and int(''.join(y for y in x[1] if y.isdigit())),
+                                  ''.join(y for y in x[1] if not y.isdigit())))
+        return res
 
     def simulate(self, player = None, enable_psychic = False):
         if not player:
@@ -901,7 +966,7 @@ def monte(acts, transforms, niter = 100, draw = True, verbose = False,
     final_wits = {i: [] for i in range(1, 6)}
     final_charisma = {i: [] for i in range(1, 6)}
     final_fighting = {i: [] for i in range(1, 6)}
-    by_class = {i: {k: 0 for k in BecomeTransform.classes}
+    by_class = {i: {k: {} for k in BecomeTransform.classes}
                 for i in range(1, 6)}
     by_weapon = {i: {} for i in range(1, 6)}
 
@@ -925,15 +990,24 @@ def monte(acts, transforms, niter = 100, draw = True, verbose = False,
             if not node or node not in (NEXT, WIN):
                 if node is LOSE:
                     nlose[cur] += 1
+                    for x in player.specialize:
+                        if x in by_class[cur]:
+                            d = by_class[cur][x]
+                            d['lose'] = d.setdefault('lose', 0) + 1
                 else:
                     nend[cur] += 1
+                    for x in player.specialize:
+                        if x in by_class[cur]:
+                            d = by_class[cur][x]
+                            d['end'] = d.setdefault('end', 0) + 1
                 logger.debug("#%d: LOST Act %s", i + 1, cur_act.act)
                 break
             else:
                 nwin[cur] += 1
                 for x in player.specialize:
                     if x in by_class[cur]:
-                        by_class[cur][x] += 1
+                        d = by_class[cur][x]
+                        d['win'] = d.setdefault('win', 0) + 1
 
                 d = by_weapon[cur]
                 for x in player.inventory:
@@ -949,6 +1023,8 @@ def monte(acts, transforms, niter = 100, draw = True, verbose = False,
                     if "engineer" in player.specialize:
                         player.wits += 2
                     elif "fighter" in player.specialize:
+                        player.hp += 2
+                        player.max_hp += 2
                         player.fighting += 1
                     elif "medic" in player.specialize:
                         player.charisma += 1
@@ -1005,8 +1081,12 @@ def monte(acts, transforms, niter = 100, draw = True, verbose = False,
                                         sigma(final_charisma[i]))
         print "%10s %5.2f +/- %5.2f" % ("fighting", mean(final_fighting[i]),
                                         sigma(final_fighting[i]))
-        print sorted(by_class[i].iteritems(), key = lambda x: by_class[i][x[0]])
-        print sorted(by_weapon[i].iteritems(), key = lambda x: by_weapon[i][x[0]])
+        print "by class:"
+        for x in sorted(by_class[i]):
+            d = by_class[i][x]
+            tot = sum(d.values()) or 1
+            print "%10s: %5.2f%% lose %r" % (x, 100 * float(d.get('lose',0)) / tot, d)
+#        print sorted(by_weapon[i].iteritems(), key = lambda x: by_weapon[i][x[0]])
         print
 
 
@@ -1019,7 +1099,9 @@ def parse_act(actfile):
 
             bits = [x.strip() for x in line.split(',')]
 
-            if line.startswith("player"):
+            if line.startswith("#"):
+                continue
+            elif line.startswith("player"):
                 _, bits = line.split(":")
                 player = parse_rules(bits)
             elif Item.couldbe(line):
@@ -1054,8 +1136,48 @@ def parse_act(actfile):
     return acts, player
 
 
+def randomize(acts):
+    import csv
+    with open("/tmp/randomize_acts.csv", "w") as handle:
+        writer = csv.writer(handle)
+        for i in range(len(acts)):
+            for line in acts[i + 1].randomize():
+                writer.writerow(line)
+
+
+def draw_all(acts, path = "/tmp"):
+    graph = pydot.Dot(simplify=True, size = "7.5, 10",
+                      ratio = "compress", fontsize = 40,
+                      nodesep = .25, ranksep = .75,
+                      graph_type='graph',fontname="Verdana")
+    cluster = pydot.Cluster("start")
+    for node in (START,):
+        node.draw(cluster)
+    graph.add_subgraph(cluster)
+
+    cluster = pydot.Cluster("final")
+    for node in (WIN, END):
+        node.draw(cluster)
+    graph.add_subgraph(cluster)
+
+    for i in range(5, 0, -1):
+        if i + 1 in acts:
+            next_node = acts[i+1].first_node
+            print next_node
+        else:
+            next_node = None
+        act = acts[i]
+        cluster = pydot.Cluster('Act_%s' % act.act,
+                                label='Act %s' % act.act.upper())
+        act.draw(graph = cluster, next = next_node)
+        graph.add_subgraph(cluster)
+        #act.draw(graph = graph, next = next_node)
+    Transition(START, acts[1].first_node, "").draw(graph)
+    graph.write_pdf(os.path.join(path, "all_acts.pdf"))
+
+
 def do(n = 10, draw = False, verbose = False, nacts = 3):
-    acts, player = parse_act("all_acts_final.txt")
+    acts, player = parse_act("all_acts_zero_start.txt")
     monte(acts, player, n, verbose = verbose, nacts = nacts)
     if verbose:
         Battle.summarize()
