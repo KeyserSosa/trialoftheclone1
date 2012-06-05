@@ -8,6 +8,7 @@ Remaining todos:
 
 import math
 import re
+import csv
 import logging
 
 if __name__ != "__main__":
@@ -572,8 +573,7 @@ class Minigame(object):
 
 class Node(object):
     def __init__(self, label, act = -1):
-        self.label = "meep"
-        self._label = label
+        self.label = label
         self.game = None
         self.transforms = []
         self.oneoff = []
@@ -654,41 +654,37 @@ class Node(object):
             if not kw.get('fillcolor'):
                 kw['fillcolor'] = "yellow"
             kw['style'] = 'filled'
-        kw['fontsize'] = 30
+        self._draw(graph, **kw)
+
+    def _draw(self, graph, **kw):
+        kw.setdefault("fontsize", 40)
         graph.add_node(pydot.Node(self.label, **kw))
 
 
 class LosingNode(Node):
     def draw(self, graph, n = 0):
-        return
-        graph.add_node(pydot.Node(self.label, fillcolor = "red",
-                                  style = "filled", shape = "octagon"))
+        self._draw(graph, fillcolor = "red",
+                   style = "filled", shape = "octagon")
 
 
 class WinningNode(Node):
     def draw(self, graph, n = 0):
-        return
-        graph.add_node(pydot.Node(self.label, fillcolor = "green",
-                                  fontsize = 50,
-                                  style = "filled", shape = "rectangle"))
+        self._draw(graph, fillcolor = "green",
+                   style = "filled", shape = "rectangle")
 
 
 class NextNode(Node):
     def draw(self, graph, n = 0):
-        return
-        graph.add_node(pydot.Node(self.label, fillcolor = "cyan",
-                                  style = "filled", shape = "rectangle"))
+        self._draw(graph, fillcolor = "cyan",
+                   style = "filled", shape = "rectangle")
 
 
 LOSE = LosingNode("LOSE")
-END = LosingNode("GAME OVER")
-WIN = WinningNode("WIN")
 START = WinningNode("START")
-NEXT = NextNode("NEXT")
 
 
 class Transition(object):
-    def __init__(self, fr, to, label):
+    def __init__(self, fr, to, label = ""):
         self.fr = fr
         self.to = to
         self.transforms = []
@@ -733,12 +729,13 @@ class Transition(object):
                 return True
         return False
 
-    def draw(self, graph, n = 0, next = None):
+    def draw(self, graph, n = 0):
         kw = {"dir": "forward"}
-        if self.to.label.endswith(END.label):
+        if isinstance(self.to, LosingNode):
             kw['color'] = "red"
             kw['weight'] = 1
-            return
+            if self.to is LOSE:
+                return
         elif self.to.label.endswith(LOSE.label):
             kw['weight'] = 0
             kw['color'] = "red"
@@ -773,9 +770,12 @@ class Transition(object):
                                    str(self.transforms)])
         if 'label' in kw:
             kw['label'] = kw['label'].replace("[", "").replace("]", "")
+            # TODO temp:
+            del kw['label']
+
         to_label = self.to.label
-        if self.to.label == NEXT.label and next is not None:
-            to_label = next.label
+        # make interact transitions nice and fat
+        if isinstance(self.fr, NextNode):
             kw['penwidth'] = 20
             kw['weight'] = 1
         edge = pydot.Edge(self.fr.label, to_label, **kw)
@@ -796,7 +796,7 @@ class Act(object):
                       '4': "iv",
                       '5': "v"}[act]
         # TODO: hack here
-        self.nodes = {"LOSE": LOSE, "GAME OVER": END, "NEXT": NEXT}
+        self.nodes = {"LOSE": LOSE}
         self.first_node = None
         self.transitions = []
         self.map = {}
@@ -813,13 +813,13 @@ class Act(object):
 
         # replace this node for that node in transitions
         for t in self.tmap.get(node, []):
-            if node is t.to:
+            if node.label == t.to.label:
                 t.to = newnode
-            elif node is t.fr:
+            elif node.label == t.fr.label:
                 t.fr = newnode
 
         # replace this node in the lookup
-        self.nodes[nname] = newnode
+        self.nodes[node.label] = newnode
         return newnode
 
     def __getitem__(self, k):
@@ -844,7 +844,7 @@ class Act(object):
         self.transitions.append(t)
 
         # lose transitions are "special"
-        if to in (LOSE, END) or t.is_losing:
+        if isinstance(to, LosingNode) or t.is_losing:
             d = self.lose_map.setdefault(fr, [])
             d.append(t)
         else:
@@ -854,7 +854,7 @@ class Act(object):
     def do_step(self, node, player):
         if node.game is not None:
             # figure out if we can lose everything
-            will_lose = any(t.to in (LOSE, END)
+            will_lose = any(isinstance(t.to, LosingNode)
                             for t in self.lose_map.get(node, []))
             if node.apply(player, will_lose = will_lose):
                 t = choice(self.map[node])
@@ -878,7 +878,7 @@ class Act(object):
                 # look ahead for gameover and try to avoid
                 _node = t.to
                 ts = self.map.get(_node, []) + self.lose_map.get(_node, [])
-                if len(ts) != 1 or ts[0].to != END:
+                if len(ts) != 1 or not isinstance(ts[0].to, LosingNode):
                     break
         t.apply(player)
 
@@ -887,7 +887,7 @@ class Act(object):
     def add_losing(self, fr):
         self.add(fr, "LOSE")
 
-    def draw(self, path = "/tmp", graph = None, next = None):
+    def draw(self, path = "/tmp", graph = None):
         save = False
         if graph is None:
             graph = pydot.Dot(size = "10,8", page = "10,8",
@@ -898,7 +898,7 @@ class Act(object):
             node.draw(graph, self.nsimulations)
 
         for transition in self.transitions:
-            transition.draw(graph, self.nsimulations, next = next)
+            transition.draw(graph, self.nsimulations)
 
         if save:
             graph.write_dot(os.path.join(path, "act%s.dot" % self.act))
@@ -928,11 +928,11 @@ class Act(object):
         nodes = []
         ends = []
         for n in self.nodes.values():
-            if n is not LOSE and n is not END and not n.label.endswith(NEXT.label):
+            if not isinstance(n, (NextNode, LosingNode)):
                 label, _, _ = n.label.partition(" ")
                 label = label.split('.')[-1]
                 if n in self.map:
-                    if self.map[n][0].to in (NEXT, WIN) or self.map[n][0].to.label.endswith(NEXT.label):
+                    if isinstance(self.map[n][0].to, (WinningNode, NextNode)):
                         ends.append(label)
                         continue
                 nodes.append(label)
@@ -966,7 +966,7 @@ class Act(object):
 
             new_node = self.do_step(node, player)
 
-            if new_node in (LOSE, END) and not node.game:
+            if isinstance(new_node, LosingNode) and not node.game:
                 if enable_psychic and len(breadcrumbs) > 1 and psychic_avoids and \
                         "psychic aspect" in player.inventory:
                     psychic_avoids -= 1
@@ -1017,7 +1017,7 @@ def monte(acts, transforms, niter = 100, draw = True, verbose = False,
             final_charisma[cur].append(player.charisma)
             final_fighting[cur].append(player.fighting)
 
-            if not node or node not in (NEXT, WIN):
+            if not isinstance(node, (WinningNode, NextNode)):
                 if node is LOSE:
                     nlose[cur] += 1
                     for x in player.specialize:
@@ -1043,11 +1043,11 @@ def monte(acts, transforms, niter = 100, draw = True, verbose = False,
                 for x in player.inventory:
                     d[x] = d.get(x, 0) + 1
 
-                if node is WIN:
+                if isinstance(node, WinningNode):
                     logger.debug("SWEET VICTORY IS MINE!")
                     break
                 # CHANGING ACTS!
-                if node is NEXT and cur < nacts:
+                if isinstance(node, NextNode) and cur < nacts:
                     cur += 1
                     player.hp = player.max_hp
                     if "engineer" in player.specialize:
@@ -1120,7 +1120,15 @@ def monte(acts, transforms, niter = 100, draw = True, verbose = False,
         print
 
 
-def parse_act(actfile):
+def parse_act(actfile, randomizer = "randomize_acts.csv"):
+
+    remap = {}
+    if randomizer:
+        with open(randomizer) as handle:
+            reader = csv.reader(handle)
+            for row in reader:
+                act, scene, newscene, _ = row
+                remap[(int(act), scene)] = newscene
 
     acts = {i: Act(str(i)) for i in range(1, 6)}
     player = []
@@ -1142,21 +1150,24 @@ def parse_act(actfile):
             elif len(bits) == 3:
                 act, node, kind = bits
                 act = int(act[-1])
+                node = remap.get((act, node), node)
                 if Node.is_kind(kind):
                     acts[act][node].set_kind(kind)
                 else:
                     # Game state change (win/lose/next-act)
                     trans = Node.is_transitional(kind)
-#                    if trans:
-#                        node = acts[act].make_transitional(node, trans)
-#                    elif "TK" not in line:
-#                        logging.error("What? %s", line)
+                    if trans:
+                        node = acts[act].make_transitional(node, trans)
+                    elif "TK" not in line:
+                        logging.error("What? %s", line)
 
             # transition?
             elif len(bits) >= 4:
                 act, start, end = bits[:3]
                 ops = ",".join(bits[3:])
                 act = int(act[-1])
+                start = remap.get((act, start), start)
+                end = remap.get((act, end), end)
                 acts[act].add(start, end, ops)
 
     for act in acts.itervalues():
@@ -1176,7 +1187,8 @@ def randomize(acts):
 
 def draw_all(acts, path = "/tmp", do_cluster = True):
     graph = pydot.Dot(simplify=True, size = "7.5, 10",
-                      ratio = "compress", fontsize = 40,
+                      ratio = "compress",
+                      nodesep = "1.5", ranksep = ".25",
                       graph_type='digraph',fontname="Verdana")
     cluster = pydot.Cluster("start") if do_cluster else graph
     for node in (START,):
@@ -1184,27 +1196,21 @@ def draw_all(acts, path = "/tmp", do_cluster = True):
     if do_cluster:
         graph.add_subgraph(cluster)
 
-    cluster = pydot.Cluster("final") if do_cluster else graph
-    for node in (WIN, END):
-        node.draw(cluster)
-    if do_cluster:
-        graph.add_subgraph(cluster)
-
     for i in range(5, 0, -1):
-        if i + 1 in acts:
-            next_node = acts[i+1].first_node
-            print next_node
-        else:
-            next_node = None
         act = acts[i]
         cluster = pydot.Cluster('Act_%s' % act.act,
                                 label='Act %s' % act.act.upper()) \
                                 if do_cluster else graph
-        act.draw(graph = cluster, next = next_node)
+        act.draw(graph = cluster)
         if do_cluster:
             graph.add_subgraph(cluster)
-        #act.draw(graph = graph, next = next_node)
+    # draw the start transtion
     Transition(START, acts[1].first_node, "").draw(graph)
+    # draw the next transitions:
+    for i in range(1, 5):
+        for n in acts[i].nodes.itervalues():
+            if isinstance(n, NextNode):
+                Transition(n, acts[i + 1].first_node).draw(graph)
     graph.write_pdf(os.path.join(path, "all_acts.pdf"))
     graph.write_dot(os.path.join(path, "all_acts.dot"))
 
