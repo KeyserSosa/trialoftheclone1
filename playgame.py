@@ -18,7 +18,7 @@ else:
     logger.basicConfig(level = logging.INFO)
 
 import os
-#import pydot
+import pydot
 from random import choice, shuffle
 
 
@@ -572,7 +572,8 @@ class Minigame(object):
 
 class Node(object):
     def __init__(self, label, act = -1):
-        self.label = label
+        self.label = "meep"
+        self._label = label
         self.game = None
         self.transforms = []
         self.oneoff = []
@@ -590,11 +591,11 @@ class Node(object):
     @classmethod
     def is_transitional(cls, label):
         if label == "gameover":
-            return END
+            return LosingNode
         elif label == "win":
-            return WIN
+            return WinningNode
         elif label == "nextact":
-            return NEXT
+            return NextNode
 
     def set_kind(self, label):
         if Battle.couldbe(label):
@@ -666,6 +667,7 @@ class LosingNode(Node):
 
 class WinningNode(Node):
     def draw(self, graph, n = 0):
+        return
         graph.add_node(pydot.Node(self.label, fillcolor = "green",
                                   fontsize = 50,
                                   style = "filled", shape = "rectangle"))
@@ -799,7 +801,26 @@ class Act(object):
         self.transitions = []
         self.map = {}
         self.lose_map = {}
+        self.tmap = {}
         self.nsimulations = 0
+
+    def make_transitional(self, nname, node_cls):
+        # create a new node of this class and COPY
+        node = self[nname]
+        newnode = node_cls(node.label)
+        for k, v in node.__dict__.iteritems():
+            setattr(newnode, k, v)
+
+        # replace this node for that node in transitions
+        for t in self.tmap.get(node, []):
+            if node is t.to:
+                t.to = newnode
+            elif node is t.fr:
+                t.fr = newnode
+
+        # replace this node in the lookup
+        self.nodes[nname] = newnode
+        return newnode
 
     def __getitem__(self, k):
         newk = ".".join([self.roman, k])
@@ -812,8 +833,16 @@ class Act(object):
     def add(self, fr, to, label = None):
         fr = self[fr] if not isinstance(fr, Node) else fr
         to = self[to] if not isinstance(to, Node) else to
+
         t = Transition(fr, to, label)
+
+        # store all transitions for this node (for updating)
+        self.tmap.setdefault(fr, []).append(t)
+        self.tmap.setdefault(to, []).append(t)
+
+        # store the existence of this transition (for drawing)
         self.transitions.append(t)
+
         # lose transitions are "special"
         if to in (LOSE, END) or t.is_losing:
             d = self.lose_map.setdefault(fr, [])
@@ -872,6 +901,7 @@ class Act(object):
             transition.draw(graph, self.nsimulations, next = next)
 
         if save:
+            graph.write_dot(os.path.join(path, "act%s.dot" % self.act))
             graph.write_pdf(os.path.join(path, "act%s.pdf" % self.act))
 
     def has_losing(self, node):
@@ -1117,11 +1147,10 @@ def parse_act(actfile):
                 else:
                     # Game state change (win/lose/next-act)
                     trans = Node.is_transitional(kind)
-                    if trans:
-                        cur = acts[act][node]
-                        acts[act].add(cur, trans)
-                    elif "TK" not in line:
-                        logging.error("What? %s", line)
+#                    if trans:
+#                        node = acts[act].make_transitional(node, trans)
+#                    elif "TK" not in line:
+#                        logging.error("What? %s", line)
 
             # transition?
             elif len(bits) >= 4:
@@ -1145,20 +1174,21 @@ def randomize(acts):
                 writer.writerow(line)
 
 
-def draw_all(acts, path = "/tmp"):
+def draw_all(acts, path = "/tmp", do_cluster = True):
     graph = pydot.Dot(simplify=True, size = "7.5, 10",
                       ratio = "compress", fontsize = 40,
-                      nodesep = .25, ranksep = .75,
-                      graph_type='graph',fontname="Verdana")
-    cluster = pydot.Cluster("start")
+                      graph_type='digraph',fontname="Verdana")
+    cluster = pydot.Cluster("start") if do_cluster else graph
     for node in (START,):
         node.draw(cluster)
-    graph.add_subgraph(cluster)
+    if do_cluster:
+        graph.add_subgraph(cluster)
 
-    cluster = pydot.Cluster("final")
+    cluster = pydot.Cluster("final") if do_cluster else graph
     for node in (WIN, END):
         node.draw(cluster)
-    graph.add_subgraph(cluster)
+    if do_cluster:
+        graph.add_subgraph(cluster)
 
     for i in range(5, 0, -1):
         if i + 1 in acts:
@@ -1168,12 +1198,15 @@ def draw_all(acts, path = "/tmp"):
             next_node = None
         act = acts[i]
         cluster = pydot.Cluster('Act_%s' % act.act,
-                                label='Act %s' % act.act.upper())
+                                label='Act %s' % act.act.upper()) \
+                                if do_cluster else graph
         act.draw(graph = cluster, next = next_node)
-        graph.add_subgraph(cluster)
+        if do_cluster:
+            graph.add_subgraph(cluster)
         #act.draw(graph = graph, next = next_node)
     Transition(START, acts[1].first_node, "").draw(graph)
     graph.write_pdf(os.path.join(path, "all_acts.pdf"))
+    graph.write_dot(os.path.join(path, "all_acts.dot"))
 
 
 def do(n = 10, draw = False, verbose = False, nacts = 3):
