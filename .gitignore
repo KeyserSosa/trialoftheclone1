@@ -1,0 +1,7 @@
+*.pdf
+*.graffle
+*.txt
+*.*~
+.DS_Store
+*.csv
+*.dot
