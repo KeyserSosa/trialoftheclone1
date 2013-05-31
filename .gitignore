@@ -5,3 +5,6 @@
 .DS_Store
 *.csv
 *.dot
+trialoftheclone.sublime-project trialoftheclone.sublime-workspace
+*.pyc
+*.sublime-*

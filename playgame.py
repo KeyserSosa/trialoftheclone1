@@ -52,9 +52,11 @@ class Player():
     def __init__(self, hp = 1, wits = 1, charisma = 1, fighting = 1):
         self.hp = hp
         self.max_hp = None
+
         self.wits = wits
         self.charisma = charisma
         self.fighting = fighting
+
         self.inventory = {}
         self.specialize = {}
 
@@ -80,11 +82,21 @@ class Player():
         other.hp -= damage
         other.hp = max(0, other.hp)
 
+
 class Opponent(Player):
     pass
 
 
 class Transform(object):
+    """
+    Base class for transformations, i.e., adding specializations or changing
+    stats of the player.
+
+    These classes exist primarily to make parsing easier.  Apply and inverse are
+    used on the actual player.
+    """
+
+    # list of words that apply to this sort of transformation
     keywords = ()
 
     def __init__(self, what):
@@ -103,6 +115,9 @@ class Transform(object):
 
     @classmethod
     def couldbe(cls, s):
+        """
+        Used to help parsing out
+        """
         s = s.strip().lower()
         for k in cls.keywords:
             if s.startswith(k):
@@ -241,6 +256,11 @@ class LoseTransform(Transform):
 
 
 class HaveTransform(Transform):
+    """
+    Transformation used for branching: checks if the player has
+    The item specified.
+    """
+
     keywords = ("you've",)
 
     def __init__(self, what):
@@ -351,6 +371,7 @@ win_re = re.compile("^you win,? *")
 
 dunno = {}
 
+
 def parse_rules(s):
     res = []
     if "TK" in s:
@@ -379,6 +400,7 @@ def parse_rules(s):
         if s.startswith(i):
             return res
 
+    print re.split('[;,]', s)
     for part in re.split('[;,]', s):
         part = part.strip().lower()
         if part and part != "(always)":
@@ -408,6 +430,7 @@ class Battle(object):
         self.wits = any(x.what == 'wits' for x in transforms)
         self.charisma = any(x.what == 'charisma' for x in transforms)
 
+        # for keeping track of statistics of the battle
         self.nbattles = 0
         self.nwins = 0
 
@@ -555,9 +578,9 @@ class Minigame(object):
         wits = 0
         while True:
             r = roll()
-            if r == 1:  #1 <= r <= 4:
+            if r == 1:  # 1 <= r <= 4:
                 wits += 2
-            elif r == 2:  #5 < r <= 8:
+            elif r == 2:  # 5 < r <= 8:
                 wits -= 2
             else:
                 break
@@ -787,6 +810,7 @@ class Transition(object):
         for transform in self.transforms:
             transform.apply(player)
 
+
 class Act(object):
     def __init__(self, act):
         self.act = act
@@ -981,6 +1005,7 @@ class Act(object):
             else:
                 breadcrumbs.append((node, player.hp))
                 node = new_node
+
 
 def monte(acts, transforms, niter = 100, draw = True, verbose = False,
           nacts = 5):
@@ -1189,15 +1214,14 @@ def draw_all(acts, path = "/tmp", do_cluster = True):
     graph = pydot.Dot(simplify=True, size = "7.5, 10",
                       ratio = "compress",
                       nodesep = "1.5", ranksep = ".25",
-                      graph_type='digraph',fontname="Verdana")
+                      graph_type='digraph', fontname="Verdana")
     cluster = pydot.Cluster("start") if do_cluster else graph
     for node in (START,):
         node.draw(cluster)
     if do_cluster:
         graph.add_subgraph(cluster)
 
-    for i in range(5, 0, -1):
-        act = acts[i]
+    for act in reversed(acts):
         cluster = pydot.Cluster('Act_%s' % act.act,
                                 label='Act %s' % act.act.upper()) \
                                 if do_cluster else graph
@@ -1205,10 +1229,11 @@ def draw_all(acts, path = "/tmp", do_cluster = True):
         if do_cluster:
             graph.add_subgraph(cluster)
     # draw the start transtion
-    Transition(START, acts[1].first_node, "").draw(graph)
+    print acts
+    Transition(START, acts[0].first_node, "").draw(graph)
     # draw the next transitions:
-    for i in range(1, 5):
-        for n in acts[i].nodes.itervalues():
+    for i, act in enumerate(acts):
+        for n in act.nodes.itervalues():
             if isinstance(n, NextNode):
                 Transition(n, acts[i + 1].first_node).draw(graph)
     graph.write_pdf(os.path.join(path, "all_acts.pdf"))
