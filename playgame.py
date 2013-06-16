@@ -10,6 +10,7 @@ import math
 import re
 import csv
 import logging
+from StringIO import StringIO
 
 if __name__ != "__main__":
     logger = logging.getLogger(__name__)
@@ -133,6 +134,9 @@ class Transform(object):
     def _what_repr(self):
         return self.what
 
+    def export(self, stream):
+        raise NotImplementedError
+
 
 class QualityTransform(Transform):
     """
@@ -187,6 +191,9 @@ class QualityTransform(Transform):
             val = int(val)
         return cls(what.strip(), kind.strip(), val)
 
+    def export(self, stream):
+        stream.write("%s %s%s" % (self.what, self.kind, self.val))
+
 
 class BecomeTransform(Transform):
     """
@@ -234,6 +241,9 @@ class GainTransform(Transform):
             player.inventory[self.what] = i
         i.apply(player)
 
+    def export(self, stream):
+        stream.write("gain %s" % self.what)
+
 
 class ResetTransform(Transform):
     keywords = ("reset", "lose all")
@@ -244,6 +254,8 @@ class ResetTransform(Transform):
         for item in player.specialize.values():
             item.remove(player)
 
+    def export(self, stream):
+        stream.write("lose all")
 
 class LoseTransform(Transform):
     keywords = ("lose", "otherwise", "you fail", "you lose")
@@ -306,6 +318,7 @@ class Status(object):
     seen = {}
 
     def __init__(self, transforms, name):
+        self.name = name
         self.transforms = transforms
         self.rtransforms = []
         for t in transforms:
@@ -313,10 +326,10 @@ class Status(object):
         self.seen[name] = self
 
     @classmethod
-    def parse(self, line):
+    def parse(cls, line):
         _, transforms, name = line.split(":")
         transforms = parse_rules(transforms)
-        return Item(transforms, name.strip())
+        return cls(transforms, name.strip())
 
     @classmethod
     def couldbe(cls, s):
@@ -335,6 +348,13 @@ class Status(object):
     def get(cls, name):
         return cls.seen[name]
 
+    def export(self, stream):
+        stream.write("%s: " % self.keyword)
+        for i, t in enumerate(self.transforms):
+            t.export(stream)
+            if i != len(self.transforms) - 1:
+                stream.write("; ")
+        stream.write(": %s\n" % self.name)
 
 class Item(Status):
     keyword = "item"
@@ -400,7 +420,6 @@ def parse_rules(s):
         if s.startswith(i):
             return res
 
-    print re.split('[;,]', s)
     for part in re.split('[;,]', s):
         part = part.strip().lower()
         if part and part != "(always)":
@@ -547,6 +566,14 @@ class Battle(object):
         self.nwins += 1
         return True
 
+    def export(self, stream):
+        stream.write("battle: ")
+        for i, t in enumerate(self.transforms):
+            t.export(stream)
+            if i != len(self.transforms) - 1:
+                stream.write("; ")
+        stream.write(": %s" % self.who)
+
 
 class Minigame(object):
     def __init__(self, name = None):
@@ -593,6 +620,8 @@ class Minigame(object):
     def couldbe(cls, label):
         return label.strip().lower().startswith("minigame")
 
+    def export(self, stream):
+        stream.write("minigme: %s" % self.name)
 
 class Node(object):
     def __init__(self, label, act = -1):
@@ -683,11 +712,31 @@ class Node(object):
         kw.setdefault("fontsize", 40)
         graph.add_node(pydot.Node(self.label, **kw))
 
+    def number(self):
+        return self.label.partition(".")[-1].partition(' ')[0]
+
+    def export(self, stream):
+        if self.game:
+            stream.write("%s, " % self.number())
+            self.game.export(stream)
+        else:
+            interesting = []
+            for t in self.transforms:
+                if isinstance(t, (GainTransform, ResetTransform)):
+                    interesting.append(t)
+            if interesting:
+                stream.write("%s, " % self.number())
+                for t in interesting:
+                    t.export(stream)
+
 
 class LosingNode(Node):
     def draw(self, graph, n = 0):
         self._draw(graph, fillcolor = "red",
                    style = "filled", shape = "octagon")
+
+    def kind(self):
+        return "gameover"
 
 
 class WinningNode(Node):
@@ -695,11 +744,17 @@ class WinningNode(Node):
         self._draw(graph, fillcolor = "green",
                    style = "filled", shape = "rectangle")
 
+    def kind(self):
+        return "win"
+
 
 class NextNode(Node):
     def draw(self, graph, n = 0):
         self._draw(graph, fillcolor = "cyan",
                    style = "filled", shape = "rectangle")
+
+    def kind(self):
+        return "nextact"
 
 
 LOSE = LosingNode("LOSE")
@@ -710,6 +765,7 @@ class Transition(object):
     def __init__(self, fr, to, label = ""):
         self.fr = fr
         self.to = to
+        self.label = label
         self.transforms = []
         self.restrictions = []
         if label:
@@ -809,6 +865,11 @@ class Transition(object):
         logger.debug(" + Transitioning %r", self)
         for transform in self.transforms:
             transform.apply(player)
+
+    def export(self, act_num, stream):
+        if not isinstance(self.to, (NextNode, WinningNode, LosingNode)):
+            stream.write("%s, %s, %s, %s\n" %
+                (act_num, self.fr.number(), self.to.number(), self.label))
 
 
 class Act(object):
@@ -914,8 +975,7 @@ class Act(object):
     def draw(self, path = "/tmp", graph = None):
         save = False
         if graph is None:
-            graph = pydot.Dot(size = "10,8", page = "10,8",
-                              graph_type='digraph',fontname="Verdana")
+            graph = pydot.Dot(graph_type='digraph', fontname="Verdana")
             save = True
 
         for node in self.nodes.values():
@@ -1006,6 +1066,33 @@ class Act(object):
                 breadcrumbs.append((node, player.hp))
                 node = new_node
 
+    def export(self, stream):
+        # print player
+        # print items
+        # print specializations
+        for s in sorted(Status.seen.values(), key=lambda x: (x.__class__, x.name)):
+            s.export(stream)
+
+        # print battles, gains, and resets
+        for n in self.nodes.values():
+            s = StringIO()
+            n.export(s)
+            s = s.getvalue()
+            if s:
+                stream.write("%s, %s\n" % (self.act, s))
+        # print special nodes
+        seen = set()
+        for t in self.transitions:
+            if t.to not in seen and \
+               isinstance(t.to, (NextNode, WinningNode, LosingNode)) and \
+               not t.fr.game:
+                seen.add(t.to)
+                stream.write("%s, %s, %s\n" %
+                    (self.act, t.to.number(), t.to.kind()))
+
+        # print transitions
+        for t in self.transitions:
+            t.export(self.act, stream)
 
 def monte(acts, transforms, niter = 100, draw = True, verbose = False,
           nacts = 5):
@@ -1162,15 +1249,23 @@ def parse_act(actfile, randomizer = "randomize_acts.csv"):
 
             bits = [x.strip() for x in line.split(',')]
 
+            # ignore comments
             if line.startswith("#"):
                 continue
+
+            # player info  line
             elif line.startswith("player"):
                 _, bits = line.split(":")
                 player = parse_rules(bits)
+
+            # Item info lines
             elif Item.couldbe(line):
                 Item.parse(line)
+
+            # Specialization lines
             elif Specialization.couldbe(line):
                 Specialization.parse(line)
+
             # label?
             elif len(bits) == 3:
                 act, node, kind = bits
@@ -1195,6 +1290,7 @@ def parse_act(actfile, randomizer = "randomize_acts.csv"):
                 end = remap.get((act, end), end)
                 acts[act].add(start, end, ops)
 
+    # make sure everything went well
     for act in acts.itervalues():
         act.validate()
 
@@ -1228,6 +1324,7 @@ def draw_all(acts, path = "/tmp", do_cluster = True):
         act.draw(graph = cluster)
         if do_cluster:
             graph.add_subgraph(cluster)
+
     # draw the start transtion
     print acts
     Transition(START, acts[0].first_node, "").draw(graph)
