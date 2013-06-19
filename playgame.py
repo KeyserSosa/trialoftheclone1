@@ -92,6 +92,23 @@ class Player():
         other.hp -= damage
         other.hp = max(0, other.hp)
 
+    def level_up(self):
+        self.hp = self.max_hp
+        if "engineer" in self.specialize:
+            self.wits += 2
+        elif "fighter" in self.specialize:
+            self.hp += 2
+            self.max_hp += 2
+            self.fighting += 1
+        elif "medic" in self.specialize:
+            self.charisma += 1
+            self.wits += 1
+        else:
+            raise "oh shit"
+        assert self.hp
+
+        return self
+
 
 class Opponent(Player):
     pass
@@ -945,13 +962,15 @@ class Act(object):
             d = self.map.setdefault(fr, [])
             d.append(t)
 
+        return t
+
     def do_step(self, node, player):
         if node.game is not None:
             # figure out if we can lose everything
             will_lose = any(isinstance(t.to, LosingNode)
                             for t in self.lose_map.get(node, []))
             if node.apply(player, will_lose = will_lose):
-                t = choice(self.map[node])
+                t = choice(self.map.get(node, self.lose_map.get(node)))
             else:
                 # reset the HP to 1 if needs be.
                 if player.hp == 0 and not player.use_medipack():
@@ -1120,6 +1139,7 @@ class ActSimResults(object):
 
     def track(self, player, final_node):
         # store the player stats
+        self.nplay += 1
         self.final_hp.append(player.hp)
         self.final_wits.append(player.wits)
         self.final_charisma.append(player.charisma)
@@ -1183,7 +1203,7 @@ class Book(object):
         return player
 
     @classmethod
-    def parse_act(cls, actfile, randomizer = "randomize_acts.csv"):
+    def parse(cls, actfile, randomizer = None):  # "randomize_acts.csv"):
 
         remap = {}
         if randomizer:
@@ -1239,7 +1259,7 @@ class Book(object):
                     act = int(act[-1])
                     start = remap.get((act, start), start)
                     end = remap.get((act, end), end)
-                    acts[act].add(start, end, ops)
+                    trans = acts[act].add(start, end, ops)
 
         # make sure everything went well
         for act in acts.itervalues():
@@ -1284,7 +1304,8 @@ class Book(object):
         graph.write_pdf(os.path.join(path, "all_acts.pdf"))
         graph.write_dot(os.path.join(path, "all_acts.dot"))
 
-    def monte(self, niter = 100, draw = False, verbose = False, nacts = 5):
+    def monte(self, niter = 100, population = None,
+              draw = False, verbose = False, nacts = 5):
 
         sim_results = {i: ActSimResults() for i in range(1, 6)}
 
@@ -1292,49 +1313,38 @@ class Book(object):
         things = {}
         specializes = {}
 
-        for i in xrange(niter):
-            player = self.new_player()
-            cur = 1
-            while True:
-                cur_act = self.acts[cur]
+        def initial_population():
+            for i in range(niter):
+                yield self.new_player()
 
-                node, player = cur_act.simulate(player)
-                sim_result[cur].track(player, node)
+        def new_population(victors):
+            if victors:
+                for i in range(niter):
+                    yield victors[i % len(victors)]
+
+        population = population or initial_population()
+        for cur, act in sorted(self.acts.items()):
+            victors = []
+            for i, player in enumerate(population):
+                node, player = act.simulate(player)
+                sim_results[cur].track(player, node)
 
                 if not isinstance(node, (WinningNode, NextNode)):
-                    logger.debug("#%d: LOST Act %s", i + 1, cur_act.act)
-                    break
+                    logger.debug("#%d: LOST Act %s", i + 1, act.act)
                 else:
+                    player.level_up()
+                    victors.append(player)
                     if isinstance(node, WinningNode):
                         logger.debug("SWEET VICTORY IS MINE!")
-                        break
-                    # CHANGING ACTS!
-                    if isinstance(node, NextNode) and cur < nacts:
-                        cur += 1
-                        player.hp = player.max_hp
-                        if "engineer" in player.specialize:
-                            player.wits += 2
-                        elif "fighter" in player.specialize:
-                            player.hp += 2
-                            player.max_hp += 2
-                            player.fighting += 1
-                        elif "medic" in player.specialize:
-                            player.charisma += 1
-                            player.wits += 1
-                        else:
-                            raise "oh shit"
-                        assert player.hp
-                    else:
-                        #print node, cur
-                        logger.debug("#%d: Completed Act %s", i + 1, cur_act.act)
-                        break
 
-            i = tuple(sorted(player.inventory.keys()))
-            s = tuple(sorted(player.specialize.keys()))
-            for x in i:
-                things[x] = things.get(x, 0) + 1
-            inventories[i] = inventories.get(i, 0) + 1
-            specializes[s] = specializes.get(s, 0) + 1
+                    i = tuple(sorted(player.inventory.keys()))
+                    s = tuple(sorted(player.specialize.keys()))
+                    for x in i:
+                        things[x] = things.get(x, 0) + 1
+                    inventories[i] = inventories.get(i, 0) + 1
+                    specializes[s] = specializes.get(s, 0) + 1
+            print "Act %d, %d victors" % (cur, len(victors))
+            population = new_population(victors)
 
         if verbose:
             print "\nInventories:"
@@ -1359,9 +1369,11 @@ class Book(object):
         for i, sim_result in sim_results.iteritems():
             sim_result.summarize(i)
 
+        return victors
+
 
 def do(n = 10, draw = False, verbose = False, nacts = 3):
-    book = Book.parse_act("all_acts_zero_start.txt")
+    book = Book.parse("episode1/episode1.toc")
     book.monte(n, verbose = verbose, nacts = nacts)
     if verbose:
         Battle.summarize()
