@@ -46,6 +46,15 @@ def spectrum(fr, to, frac):
     return hexcolor(*[x * (1 - frac) + y * frac for x, y in zip(fr, to)])
 
 
+def mean(array):
+    return float(sum(array)) / (len(array) or 1)
+
+
+def sigma(array):
+    return math.sqrt(max(sum(x ** 2 for x in array) / (len(array) or 1) -
+                         mean(array) ** 2, 0))
+
+
 class Player():
     fight_roll_multiplier = 1.
     wits_roll_multiplier = 1.
@@ -1094,252 +1103,266 @@ class Act(object):
         for t in self.transitions:
             t.export(self.act, stream)
 
-def monte(acts, transforms, niter = 100, draw = True, verbose = False,
-          nacts = 5):
-    nwin = {i: 0 for i in range(1, 6)}
-    nlose = {i: 0 for i in range(1, 6)}
-    nend = {i: 0 for i in range(1, 6)}
-    nplay = {i: 0 for i in range(1, 6)}
-    inventories = {}
-    things = {}
-    specializes = {}
 
-    final_hp = {i: [] for i in range(1, 6)}
-    final_wits = {i: [] for i in range(1, 6)}
-    final_charisma = {i: [] for i in range(1, 6)}
-    final_fighting = {i: [] for i in range(1, 6)}
-    by_class = {i: {k: {} for k in BecomeTransform.classes}
-                for i in range(1, 6)}
-    by_weapon = {i: {} for i in range(1, 6)}
+class ActSimResults(object):
+    def __init__(self):
+        self.nwin = 0
+        self.nlose = 0
+        self.nend = 0
+        self.nplay = 0
 
-    for i in xrange(niter):
+        self.final_hp = []
+        self.final_wits = []
+        self.final_charisma = []
+        self.final_fighting = []
+        self.by_class = {k: {} for k in BecomeTransform.classes}
+        self.by_weapon = {}
+
+    def track(self, player, final_node):
+        # store the player stats
+        self.final_hp.append(player.hp)
+        self.final_wits.append(player.wits)
+        self.final_charisma.append(player.charisma)
+        self.final_fighting.append(player.fighting)
+
+        if not isinstance(final_node, (WinningNode, NextNode)):
+            if final_node is LOSE:
+                self.nlose += 1
+                for x in player.specialize:
+                    if x in self.by_class:
+                        d = self.by_class[x]
+                        d['lose'] = d.setdefault('lose', 0) + 1
+            else:
+                self.nend += 1
+                for x in player.specialize:
+                    if x in self.by_class:
+                        d = self.by_class[x]
+                        d['end'] = d.setdefault('end', 0) + 1
+        else:
+            self.nwin += 1
+            for x in player.specialize:
+                if x in self.by_class:
+                    d = self.by_class[x]
+                    d['win'] = d.setdefault('win', 0) + 1
+
+            d = self.by_weapon
+            for x in player.inventory:
+                d[x] = d.get(x, 0) + 1
+
+    def summarize(self, act_num):
+        print "Player Stats: (Act %d) %d wins, %d lose, %d gameover\n  ==> %d total, %5.2f%% loss)" % (
+            act_num, self.nwin, self.nlose, self.nend, self.nplay, (100. * self.nlose / max(self.nplay, 1)))
+        print "%10s %5.2f +/- %5.2f" % ("hp", mean(self.final_hp),
+                                        sigma(self.final_hp))
+        print "%10s %5.2f +/- %5.2f" % ("wits", mean(self.final_wits),
+                                        sigma(self.final_wits))
+        print "%10s %5.2f +/- %5.2f" % ("charisma", mean(self.final_charisma),
+                                        sigma(self.final_charisma))
+        print "%10s %5.2f +/- %5.2f" % ("fighting", mean(self.final_fighting),
+                                        sigma(self.final_fighting))
+        print "by class:"
+        for x in sorted(self.by_class):
+            d = self.by_class[x]
+            tot = sum(d.values()) or 1
+            print "%10s: %5.2f%% lose %r" % \
+               (x, 100 * float(d.get('lose',0)) / tot, d)
+#        print sorted(self.by_weapon.iteritems(), key = lambda x: self.by_weapon[x[0]])
+        print
+
+
+class Book(object):
+    def __init__(self, acts, player_transforms):
+        self.acts = acts
+        self.player_transforms = player_transforms
+
+    def new_player(self):
         player = Player()
-        for transform in transforms:
+        for transform in self.player_transforms:
             transform.apply(player)
             player.max_hp = player.hp
+        return player
 
-        cur = 1
-        while True:
-            cur_act = acts[cur]
-            nplay[cur] += 1
-            node, player = cur_act.simulate(player)
-            # store the player stats
-            final_hp[cur].append(player.hp)
-            final_wits[cur].append(player.wits)
-            final_charisma[cur].append(player.charisma)
-            final_fighting[cur].append(player.fighting)
+    @classmethod
+    def parse_act(cls, actfile, randomizer = "randomize_acts.csv"):
 
-            if not isinstance(node, (WinningNode, NextNode)):
-                if node is LOSE:
-                    nlose[cur] += 1
-                    for x in player.specialize:
-                        if x in by_class[cur]:
-                            d = by_class[cur][x]
-                            d['lose'] = d.setdefault('lose', 0) + 1
-                else:
-                    nend[cur] += 1
-                    for x in player.specialize:
-                        if x in by_class[cur]:
-                            d = by_class[cur][x]
-                            d['end'] = d.setdefault('end', 0) + 1
-                logger.debug("#%d: LOST Act %s", i + 1, cur_act.act)
-                break
-            else:
-                nwin[cur] += 1
-                for x in player.specialize:
-                    if x in by_class[cur]:
-                        d = by_class[cur][x]
-                        d['win'] = d.setdefault('win', 0) + 1
+        remap = {}
+        if randomizer:
+            with open(randomizer) as handle:
+                reader = csv.reader(handle)
+                for row in reader:
+                    act, scene, newscene, _ = row
+                    remap[(int(act), scene)] = newscene
 
-                d = by_weapon[cur]
-                for x in player.inventory:
-                    d[x] = d.get(x, 0) + 1
+        acts = {i: Act(str(i)) for i in range(1, 6)}
+        player = []
+        with open(actfile) as handle:
+            for line in handle:
 
-                if isinstance(node, WinningNode):
-                    logger.debug("SWEET VICTORY IS MINE!")
-                    break
-                # CHANGING ACTS!
-                if isinstance(node, NextNode) and cur < nacts:
-                    cur += 1
-                    player.hp = player.max_hp
-                    if "engineer" in player.specialize:
-                        player.wits += 2
-                    elif "fighter" in player.specialize:
-                        player.hp += 2
-                        player.max_hp += 2
-                        player.fighting += 1
-                    elif "medic" in player.specialize:
-                        player.charisma += 1
-                        player.wits += 1
+                bits = [x.strip() for x in line.split(',')]
+
+                # ignore comments
+                if line.startswith("#"):
+                    continue
+
+                # player info  line
+                elif line.startswith("player"):
+                    _, bits = line.split(":")
+                    player = parse_rules(bits)
+
+                # Item info lines
+                elif Item.couldbe(line):
+                    Item.parse(line)
+
+                # Specialization lines
+                elif Specialization.couldbe(line):
+                    Specialization.parse(line)
+
+                # label?
+                elif len(bits) == 3:
+                    act, node, kind = bits
+                    act = int(act[-1])
+                    node = remap.get((act, node), node)
+                    if Node.is_kind(kind):
+                        acts[act][node].set_kind(kind)
                     else:
-                        raise "oh shit"
-                    assert player.hp
-                else:
-                    #print node, cur
-                    logger.debug("#%d: Completed Act %s", i + 1, cur_act.act)
-                    break
+                        # Game state change (win/lose/next-act)
+                        trans = Node.is_transitional(kind)
+                        if trans:
+                            node = acts[act].make_transitional(node, trans)
+                        elif "TK" not in line:
+                            logging.error("What? %s", line)
 
-        i = tuple(sorted(player.inventory.keys()))
-        s = tuple(sorted(player.specialize.keys()))
-        for x in i:
-            things[x] = things.get(x, 0) + 1
-        inventories[i] = inventories.get(i, 0) + 1
-        specializes[s] = specializes.get(s, 0) + 1
+                # transition?
+                elif len(bits) >= 4:
+                    act, start, end = bits[:3]
+                    ops = ",".join(bits[3:])
+                    act = int(act[-1])
+                    start = remap.get((act, start), start)
+                    end = remap.get((act, end), end)
+                    acts[act].add(start, end, ops)
 
-    if verbose:
-        print "\nInventories:"
-        for i in sorted(inventories, key = lambda x: inventories[x],
-                        reverse = True):
-            print "%7.2f%% %s" % (inventories[i] * 100. / niter, i)
+        # make sure everything went well
+        for act in acts.itervalues():
+            act.validate()
 
-        print "\nThings:"
-        for i in sorted(things, key = lambda x: things[x],
-                        reverse = True):
-            print "%7.2f%% %s" % (things[i] * 100. / niter, i)
+        return cls(acts, player)
 
-        print "\nSpecializations:"
-        for s in sorted(specializes, key = lambda x: specializes[x],
-                        reverse = True):
-            print "%7.2f%% %s" % (specializes[s] * 100. / niter, s)
-        print
+    def randomize(self):
+        import csv
+        with open("/tmp/randomize_acts.csv", "w") as handle:
+            writer = csv.writer(handle)
+            for i in range(len(self.acts)):
+                for line in acts[i + 1].randomize():
+                    writer.writerow(line)
 
-#    if draw:
-#        self.draw()
-
-    def mean(array):
-        return float(sum(array)) / (len(array) or 1)
-
-    def sigma(array):
-        return math.sqrt(max(sum(x ** 2 for x in array) / (len(array) or 1)-
-                             mean(array) ** 2, 0))
-    for i in range(1, nacts+1):
-        print "Player Stats: (Act %d) %d wins, %d lose, %d gameover\n  ==> %d total, %5.2f%% loss)" % (
-            i, nwin[i], nlose[i], nend[i], nplay[i], (100. * nlose[i] / max(nplay[i], 1)))
-        print "%10s %5.2f +/- %5.2f" % ("hp", mean(final_hp[i]),
-                                        sigma(final_hp[i]))
-        print "%10s %5.2f +/- %5.2f" % ("wits", mean(final_wits[i]),
-                                        sigma(final_wits[i]))
-        print "%10s %5.2f +/- %5.2f" % ("charisma", mean(final_charisma[i]),
-                                        sigma(final_charisma[i]))
-        print "%10s %5.2f +/- %5.2f" % ("fighting", mean(final_fighting[i]),
-                                        sigma(final_fighting[i]))
-        print "by class:"
-        for x in sorted(by_class[i]):
-            d = by_class[i][x]
-            tot = sum(d.values()) or 1
-            print "%10s: %5.2f%% lose %r" % (x, 100 * float(d.get('lose',0)) / tot, d)
-#        print sorted(by_weapon[i].iteritems(), key = lambda x: by_weapon[i][x[0]])
-        print
-
-
-def parse_act(actfile, randomizer = "randomize_acts.csv"):
-
-    remap = {}
-    if randomizer:
-        with open(randomizer) as handle:
-            reader = csv.reader(handle)
-            for row in reader:
-                act, scene, newscene, _ = row
-                remap[(int(act), scene)] = newscene
-
-    acts = {i: Act(str(i)) for i in range(1, 6)}
-    player = []
-    with open(actfile) as handle:
-        for line in handle:
-
-            bits = [x.strip() for x in line.split(',')]
-
-            # ignore comments
-            if line.startswith("#"):
-                continue
-
-            # player info  line
-            elif line.startswith("player"):
-                _, bits = line.split(":")
-                player = parse_rules(bits)
-
-            # Item info lines
-            elif Item.couldbe(line):
-                Item.parse(line)
-
-            # Specialization lines
-            elif Specialization.couldbe(line):
-                Specialization.parse(line)
-
-            # label?
-            elif len(bits) == 3:
-                act, node, kind = bits
-                act = int(act[-1])
-                node = remap.get((act, node), node)
-                if Node.is_kind(kind):
-                    acts[act][node].set_kind(kind)
-                else:
-                    # Game state change (win/lose/next-act)
-                    trans = Node.is_transitional(kind)
-                    if trans:
-                        node = acts[act].make_transitional(node, trans)
-                    elif "TK" not in line:
-                        logging.error("What? %s", line)
-
-            # transition?
-            elif len(bits) >= 4:
-                act, start, end = bits[:3]
-                ops = ",".join(bits[3:])
-                act = int(act[-1])
-                start = remap.get((act, start), start)
-                end = remap.get((act, end), end)
-                acts[act].add(start, end, ops)
-
-    # make sure everything went well
-    for act in acts.itervalues():
-        act.validate()
-
-    return acts, player
-
-
-def randomize(acts):
-    import csv
-    with open("/tmp/randomize_acts.csv", "w") as handle:
-        writer = csv.writer(handle)
-        for i in range(len(acts)):
-            for line in acts[i + 1].randomize():
-                writer.writerow(line)
-
-
-def draw_all(acts, path = "/tmp", do_cluster = True):
-    graph = pydot.Dot(simplify=True, size = "7.5, 10",
-                      ratio = "compress",
-                      nodesep = "1.5", ranksep = ".25",
-                      graph_type='digraph', fontname="Verdana")
-    cluster = pydot.Cluster("start") if do_cluster else graph
-    for node in (START,):
-        node.draw(cluster)
-    if do_cluster:
-        graph.add_subgraph(cluster)
-
-    for act in reversed(acts):
-        cluster = pydot.Cluster('Act_%s' % act.act,
-                                label='Act %s' % act.act.upper()) \
-                                if do_cluster else graph
-        act.draw(graph = cluster)
+    def draw_all(self, path = "/tmp", do_cluster = True):
+        graph = pydot.Dot(simplify=True, size = "7.5, 10",
+                          ratio = "compress",
+                          nodesep = "1.5", ranksep = ".25",
+                          graph_type='digraph', fontname="Verdana")
+        cluster = pydot.Cluster("start") if do_cluster else graph
+        for node in (START,):
+            node.draw(cluster)
         if do_cluster:
             graph.add_subgraph(cluster)
 
-    # draw the start transtion
-    print acts
-    Transition(START, acts[0].first_node, "").draw(graph)
-    # draw the next transitions:
-    for i, act in enumerate(acts):
-        for n in act.nodes.itervalues():
-            if isinstance(n, NextNode):
-                Transition(n, acts[i + 1].first_node).draw(graph)
-    graph.write_pdf(os.path.join(path, "all_acts.pdf"))
-    graph.write_dot(os.path.join(path, "all_acts.dot"))
+        for act in reversed(self.acts):
+            cluster = pydot.Cluster('Act_%s' % act.act,
+                                    label='Act %s' % act.act.upper()) \
+                                    if do_cluster else graph
+            act.draw(graph = cluster)
+            if do_cluster:
+                graph.add_subgraph(cluster)
+
+        # draw the start transtion
+        Transition(START, self.acts[1].first_node, "").draw(graph)
+        # draw the next transitions:
+        for i, act in enumerate(self.acts):
+            for n in act.nodes.itervalues():
+                if isinstance(n, NextNode):
+                    Transition(n, self.acts[i + 1].first_node).draw(graph)
+        graph.write_pdf(os.path.join(path, "all_acts.pdf"))
+        graph.write_dot(os.path.join(path, "all_acts.dot"))
+
+    def monte(self, niter = 100, draw = False, verbose = False, nacts = 5):
+
+        sim_results = {i: ActSimResults() for i in range(1, 6)}
+
+        inventories = {}
+        things = {}
+        specializes = {}
+
+        for i in xrange(niter):
+            player = self.new_player()
+            cur = 1
+            while True:
+                cur_act = self.acts[cur]
+
+                node, player = cur_act.simulate(player)
+                sim_result[cur].track(player, node)
+
+                if not isinstance(node, (WinningNode, NextNode)):
+                    logger.debug("#%d: LOST Act %s", i + 1, cur_act.act)
+                    break
+                else:
+                    if isinstance(node, WinningNode):
+                        logger.debug("SWEET VICTORY IS MINE!")
+                        break
+                    # CHANGING ACTS!
+                    if isinstance(node, NextNode) and cur < nacts:
+                        cur += 1
+                        player.hp = player.max_hp
+                        if "engineer" in player.specialize:
+                            player.wits += 2
+                        elif "fighter" in player.specialize:
+                            player.hp += 2
+                            player.max_hp += 2
+                            player.fighting += 1
+                        elif "medic" in player.specialize:
+                            player.charisma += 1
+                            player.wits += 1
+                        else:
+                            raise "oh shit"
+                        assert player.hp
+                    else:
+                        #print node, cur
+                        logger.debug("#%d: Completed Act %s", i + 1, cur_act.act)
+                        break
+
+            i = tuple(sorted(player.inventory.keys()))
+            s = tuple(sorted(player.specialize.keys()))
+            for x in i:
+                things[x] = things.get(x, 0) + 1
+            inventories[i] = inventories.get(i, 0) + 1
+            specializes[s] = specializes.get(s, 0) + 1
+
+        if verbose:
+            print "\nInventories:"
+            for i in sorted(inventories, key = lambda x: inventories[x],
+                            reverse = True):
+                print "%7.2f%% %s" % (inventories[i] * 100. / niter, i)
+
+            print "\nThings:"
+            for i in sorted(things, key = lambda x: things[x],
+                            reverse = True):
+                print "%7.2f%% %s" % (things[i] * 100. / niter, i)
+
+            print "\nSpecializations:"
+            for s in sorted(specializes, key = lambda x: specializes[x],
+                            reverse = True):
+                print "%7.2f%% %s" % (specializes[s] * 100. / niter, s)
+            print
+
+        if draw:
+            self.draw()
+
+        for i, sim_result in sim_results.iteritems():
+            sim_result.summarize(i)
 
 
 def do(n = 10, draw = False, verbose = False, nacts = 3):
-    acts, player = parse_act("all_acts_zero_start.txt")
-    monte(acts, player, n, verbose = verbose, nacts = nacts)
+    book = Book.parse_act("all_acts_zero_start.txt")
+    book.monte(n, verbose = verbose, nacts = nacts)
     if verbose:
         Battle.summarize()
     if draw:
