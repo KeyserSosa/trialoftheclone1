@@ -55,6 +55,48 @@ def sigma(array):
                          mean(array) ** 2, 0))
 
 
+def simple_cmp(o1, o2, *attrs):
+    if o1.__class__ != o2.__class__:
+        print "failed class", o1, o2
+        return cmp(o1.__class__, o2.__class__)
+    else:
+        for a in attrs:
+            c = cmp(getattr(o1, a), getattr(o2, a))
+            if c:
+                print "failed %s '%s' '%s' %s" % (a, o1, o2, c)
+                return c
+        return 0
+
+
+def do_set_cmp(s1, s2):
+    l1 = list(sorted(s1))
+    l2 = list(sorted(s2))
+    return cmp(l1, l2)
+
+
+def set_cmp(o1, o2, attr):
+    c = do_set_cmp(getattr(o1, attr), getattr(o2, attr))
+    if c:
+        print "set cmp", o1, o2, attr, c
+    return c
+
+
+def dict_cmp(o1, o2, attr):
+    d1 = getattr(o1, attr)
+    d2 = getattr(o2, attr)
+    if len(d1) != len(d1):
+        return cmp(len(d1), len(d2))
+    elif list(sorted(d1.keys())) != list(sorted(d2.keys())):
+        return cmp(list(sorted(d1.keys())),
+                   list(sorted(d2.keys())))
+    else:
+        for act in d1:
+            c = cmp(d1[act], d2[act])
+            if c:
+                return c
+            return 0
+
+
 class Player():
     fight_roll_multiplier = 1.
     wits_roll_multiplier = 1.
@@ -163,6 +205,9 @@ class Transform(object):
     def export(self, stream):
         raise NotImplementedError
 
+    def __cmp__(self, other):
+        return simple_cmp(self, other, "what")
+
 
 class QualityTransform(Transform):
     """
@@ -175,6 +220,9 @@ class QualityTransform(Transform):
         self.kind = kind
         self.val = val
         self.prev_val = None
+
+    def __cmp__(self, other):
+        return simple_cmp(self, other, "what", "kind", "val")
 
     def inverse(self):
         if self.kind != "=":
@@ -382,6 +430,11 @@ class Status(object):
                 stream.write("; ")
         stream.write(": %s\n" % self.name)
 
+    def __cmp__(self, other):
+        return simple_cmp(self, other, "name") or \
+            set_cmp(self, other, "transforms")
+
+
 class Item(Status):
     keyword = "item"
 
@@ -487,6 +540,10 @@ class Battle(object):
         self.witvantage = []
 
         self.seen.append(self)
+
+    def __cmp__(self, other):
+        return simple_cmp(self, other, "who", "act", "fight", "wits",
+            "charisma") or set_cmp(self, other, "transforms")
 
     def __repr__(self):
         kind = []
@@ -602,15 +659,20 @@ class Battle(object):
 
 
 class Minigame(object):
-    def __init__(self, name = None):
+    def __init__(self, name, label):
         self.name = name
+        self.label = label
+
+    def __cmp__(self, other):
+        return simple_cmp(self, other, "name")
 
     @classmethod
     def parse(cls, s):
         _, _, s = s.partition(":")
         s = s.strip()
+        label = s
         name, _, _ = s.partition(":")
-        return Minigame(name)
+        return Minigame(name, label)
 
     def apply(self, player, **kw):
         func = getattr(self, "do_" + self.name)
@@ -647,7 +709,7 @@ class Minigame(object):
         return label.strip().lower().startswith("minigame")
 
     def export(self, stream):
-        stream.write("minigme: %s" % self.name)
+        stream.write("minigame: %s" % self.label)
 
 class Node(object):
     def __init__(self, label, act = -1):
@@ -657,6 +719,10 @@ class Node(object):
         self.oneoff = []
         self.traversed = 0
         self.act = act
+
+    def __cmp__(self, other):
+        return simple_cmp(self, other, "label", "game") or \
+            set_cmp(self, other, "transforms")
 
     @classmethod
     def is_kind(cls, label):
@@ -745,15 +811,16 @@ class Node(object):
         if self.game:
             stream.write("%s, " % self.number())
             self.game.export(stream)
-        else:
-            interesting = []
-            for t in self.transforms:
-                if isinstance(t, (GainTransform, ResetTransform)):
-                    interesting.append(t)
-            if interesting:
-                stream.write("%s, " % self.number())
-                for t in interesting:
-                    t.export(stream)
+        interesting = []
+        for t in self.transforms:
+            if isinstance(t, (GainTransform, ResetTransform)):
+                interesting.append(t)
+        if interesting:
+            if self.game:
+                stream.write("\n%s, " % self.act)
+            stream.write("%s, " % self.number())
+            for t in interesting:
+                t.export(stream)
 
 
 class LosingNode(Node):
@@ -808,6 +875,11 @@ class Transition(object):
                               for x in self.transforms))
         self.is_winning = False
 
+    def __cmp__(self, other):
+        return simple_cmp(self, other, "fr", "to", "label") or \
+            set_cmp(self, other, "transforms") or \
+            set_cmp(self, other, "restrictions")
+
     def __repr__(self):
         arrow = ""
         if self.transforms:
@@ -817,7 +889,7 @@ class Transition(object):
         if self.is_losing:
             arrow += "[lose]"
         if self.restrictions:
-            arrow += "(%s)" %  ",".join([str(x) for x in self.restrictions])
+            arrow += "(%s)" % ",".join([str(x) for x in self.restrictions])
 
         arrow = arrow.replace("[", "").replace("]", "")
         return "(%r -%s-> %r)" % (self.fr, arrow, self.to)
@@ -893,7 +965,7 @@ class Transition(object):
             transform.apply(player)
 
     def export(self, act_num, stream):
-        if not isinstance(self.to, (NextNode, WinningNode, LosingNode)):
+        if self.to is not LOSE:
             stream.write("%s, %s, %s, %s\n" %
                 (act_num, self.fr.number(), self.to.number(), self.label))
 
@@ -914,6 +986,14 @@ class Act(object):
         self.lose_map = {}
         self.tmap = {}
         self.nsimulations = 0
+
+    def __cmp__(self, other):
+        return simple_cmp(self, other, "act", "transitions", "map",
+                          "lose_map", "tmap")
+
+    def __repr__(self):
+        return "<Act %s (%d pages, %d trans)>" % \
+            (self.act, len(self.nodes), len(self.transitions))
 
     def make_transitional(self, nname, node_cls):
         # create a new node of this class and COPY
@@ -1096,10 +1176,6 @@ class Act(object):
 
     def export(self, stream):
         # print player
-        # print items
-        # print specializations
-        for s in sorted(Status.seen.values(), key=lambda x: (x.__class__, x.name)):
-            s.export(stream)
 
         # print battles, gains, and resets
         for n in self.nodes.values():
@@ -1201,6 +1277,9 @@ class Book(object):
             transform.apply(player)
             player.max_hp = player.hp
         return player
+
+    def __cmp__(self, other):
+        return dict_cmp(self, other, "acts")
 
     @classmethod
     def parse(cls, actfile, randomizer = None):  # "randomize_acts.csv"):
@@ -1370,6 +1449,15 @@ class Book(object):
             sim_result.summarize(i)
 
         return victors
+
+    def export(self, stream):
+
+        for s in sorted(Status.seen.values(), key=lambda x: (x.__class__, x.name)):
+            s.export(stream)
+
+        for act in sorted(self.acts.values(), key=lambda x: x.act):
+            act.export(stream)
+
 
 
 def do(n = 10, draw = False, verbose = False, nacts = 3):
